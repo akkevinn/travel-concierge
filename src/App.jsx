@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import './index.css';
+
+// Fix for default Leaflet icons in Webpack/Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
 
 // --- Dashboard Components ---
 
@@ -231,17 +245,13 @@ const TripViewer = ({ trips }) => {
 
   const activeData = trip.itinerary[activeDay];
 
-  // Map generation logic
-  const allPlaces = [...activeData.destinations, ...activeData.food].map(p => p.name + ' ' + activeData.location);
-  let mapUrl = '';
-  if (allPlaces.length === 1) {
-    mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(allPlaces[0])}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
-  } else if (allPlaces.length > 1) {
-    const origin = allPlaces[0];
-    const rest = allPlaces.slice(1);
-    const daddr = rest.map(p => encodeURIComponent(p)).join('+to:');
-    mapUrl = `https://maps.google.com/maps?saddr=${encodeURIComponent(origin)}&daddr=${daddr}&output=embed`;
-  }
+  // Combine and filter places that have valid coordinates
+  const allPlaces = [...activeData.destinations, ...activeData.food].filter(p => p.coordinates);
+  
+  // Calculate bounding box for the map to auto-zoom
+  const bounds = allPlaces.length > 0 
+    ? allPlaces.map(p => [p.coordinates.lat, p.coordinates.lng])
+    : undefined;
 
   return (
     <div className="app-container">
@@ -321,21 +331,39 @@ const TripViewer = ({ trips }) => {
               )}
             </div>
 
-            {/* Map Column */}
+            {/* Premium Dark Theme Leaflet Map Column */}
             <div>
               <div style={{ position: 'sticky', top: '2rem' }}>
                 <h3 className="font-serif" style={{ marginBottom: '1.5rem', color: 'var(--accent)' }}>Daily Route</h3>
-                {mapUrl ? (
-                  <div className="glass-panel animate-fade-in" style={{ height: '600px', overflow: 'hidden' }}>
-                    <iframe
-                      title={`Route Map Day ${activeData.day}`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      loading="lazy"
-                      allowFullScreen
-                      src={mapUrl}
-                    />
+                {allPlaces.length > 0 ? (
+                  <div className="glass-panel animate-fade-in" style={{ height: '600px', overflow: 'hidden', padding: 0 }}>
+                    {/* Using key={activeDay} forces the map to fully remount and re-calculate bounds when switching days */}
+                    <MapContainer 
+                      key={activeDay}
+                      bounds={bounds} 
+                      style={{ height: '100%', width: '100%', zIndex: 1, background: '#1c1c1c' }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      />
+                      {allPlaces.map((place, idx) => (
+                        <Marker key={idx} position={[place.coordinates.lat, place.coordinates.lng]}>
+                          <Popup className="premium-popup">
+                            <strong style={{ color: '#000' }}>{place.name}</strong><br />
+                            {place.estimatedTime && <span style={{ color: '#666', fontSize: '0.85rem' }}>{place.estimatedTime}</span>}
+                          </Popup>
+                        </Marker>
+                      ))}
+                      <Polyline 
+                        positions={allPlaces.map(p => [p.coordinates.lat, p.coordinates.lng])}
+                        color="var(--accent)"
+                        weight={4}
+                        opacity={0.8}
+                        dashArray="5, 10"
+                      />
+                    </MapContainer>
                   </div>
                 ) : (
                   <div className="glass-panel flex items-center justify-center" style={{ height: '600px' }}>

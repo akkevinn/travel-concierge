@@ -5,7 +5,13 @@
     "date": "14-21 November 2026",
     "startDate": "2026-11-14T00:00:00",
     "subtitle": "An 8-day journey through temples, markets & street feasts.",
-    "stats": { "days": 8, "cities": 2, "temples": 10, "food": 13, "shopping": 12 },
+    "stats": {
+      "days": 8,
+      "cities": 2,
+      "temples": 10,
+      "food": 13,
+      "shopping": 12
+    },
     "coverImage": "/bangkok.png",
     "itinerary": [
       {
@@ -14,13 +20,48 @@
         "location": "Bangkok",
         "image": "/day1.png",
         "destinations": [
-          { "name": "Siam Paragon", "estimatedTime": "2.5 hours" },
-          { "name": "Terminal 21 Asok", "estimatedTime": "1.5 hours" },
-          { "name": "Chatuchak Market (weekend)", "estimatedTime": "3 hours" }
+          {
+            "name": "Siam Paragon",
+            "estimatedTime": "2.5 hours",
+            "coordinates": {
+              "lat": 13.7467785,
+              "lng": 100.534954
+            }
+          },
+          {
+            "name": "Terminal 21 Asok",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7379057,
+              "lng": 100.5593354
+            }
+          },
+          {
+            "name": "Chatuchak Market (weekend)",
+            "estimatedTime": "3 hours",
+            "coordinates": {
+              "lat": 13.8002651,
+              "lng": 100.5511228
+            }
+          }
         ],
         "food": [
-          { "name": "Kanon Siam", "estimatedTime": "30 mins" },
-          { "name": "After You", "estimatedTime": "1 hour" }
+          {
+            "name": "Kanon Siam",
+            "estimatedTime": "30 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "After You",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7798315,
+              "lng": 100.5452473
+            }
+          }
         ]
       },
       {
@@ -29,13 +70,48 @@
         "location": "Bangkok",
         "image": "/day2.png",
         "destinations": [
-          { "name": "Ancient City", "estimatedTime": "3.5 hours" },
-          { "name": "Erawan Museum", "estimatedTime": "1.5 hours" },
-          { "name": "Pratunam Market", "estimatedTime": "2.5 hours" }
+          {
+            "name": "Ancient City",
+            "estimatedTime": "3.5 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Erawan Museum",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Pratunam Market",
+            "estimatedTime": "2.5 hours",
+            "coordinates": {
+              "lat": 13.7522704,
+              "lng": 100.5405377
+            }
+          }
         ],
         "food": [
-          { "name": "Lunch after Ancient City", "estimatedTime": "1 hour" },
-          { "name": "Thai Food", "estimatedTime": "1 hour" }
+          {
+            "name": "Lunch after Ancient City",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Thai Food",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7603866,
+              "lng": 100.496798
+            }
+          }
         ]
       },
       {
@@ -44,19 +120,96 @@
         "location": "Bangkok",
         "image": "/day3.png",
         "destinations": [
-          { "name": "Wat Arun", "estimatedTime": "1.5 hours" },
-          { "name": "Wat Paknam", "estimatedTime": "1 hour" },
-          { "name": "Wat Kun Chan", "estimatedTime": "45 mins" },
-          { "name": "Thao Maha Brahma", "estimatedTime": "45 mins" },
-          { "name": "Go Ang Chicken Rice", "estimatedTime": "1 hour" },
-          { "name": "Central World", "estimatedTime": "2.5 hours" }
+          {
+            "name": "Wat Arun",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7438976,
+              "lng": 100.4885137
+            }
+          },
+          {
+            "name": "Wat Paknam",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7216719,
+              "lng": 100.4704273
+            }
+          },
+          {
+            "name": "Wat Kun Chan",
+            "estimatedTime": "45 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Thao Maha Brahma",
+            "estimatedTime": "45 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Go Ang Chicken Rice",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Central World",
+            "estimatedTime": "2.5 hours",
+            "coordinates": {
+              "lat": 13.7465769,
+              "lng": 100.5390414
+            }
+          }
         ],
         "food": [
-          { "name": "Lunch after Thao Maha Brahma - Go Ang Chicken Rice", "estimatedTime": "1 hour" },
-          { "name": "Dinner at Central World", "estimatedTime": "1.5 hours" },
-          { "name": "Karun @Central World", "estimatedTime": "30 mins" },
-          { "name": "Yaowarat Tasty Toasted Bun @Central World", "estimatedTime": "30 mins" },
-          { "name": "The Place 168 Giant Tomyam near @Central World", "estimatedTime": "1 hour" }
+          {
+            "name": "Lunch after Thao Maha Brahma - Go Ang Chicken Rice",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Dinner at Central World",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Karun @Central World",
+            "estimatedTime": "30 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Yaowarat Tasty Toasted Bun @Central World",
+            "estimatedTime": "30 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "The Place 168 Giant Tomyam near @Central World",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          }
         ]
       },
       {
@@ -65,15 +218,64 @@
         "location": "Chiang Rai",
         "image": "/day4.png",
         "destinations": [
-          { "name": "Wat Welunaram (before airport)", "estimatedTime": "45 mins" },
-          { "name": "Chiang Rai Hotel", "estimatedTime": "30 mins (check-in)" },
-          { "name": "Wat Huay Pla Kang", "estimatedTime": "1.5 hours" },
-          { "name": "Lalita Cafe", "estimatedTime": "1 hour" },
-          { "name": "Chiang Rai Night Bazaar", "estimatedTime": "2 hours" }
+          {
+            "name": "Wat Welunaram (before airport)",
+            "estimatedTime": "45 mins",
+            "coordinates": {
+              "lat": 19.7589517,
+              "lng": 99.6734592
+            }
+          },
+          {
+            "name": "Chiang Rai Hotel",
+            "estimatedTime": "30 mins (check-in)",
+            "coordinates": {
+              "lat": 19.9082294,
+              "lng": 99.8311238
+            }
+          },
+          {
+            "name": "Wat Huay Pla Kang",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 19.9488435,
+              "lng": 99.8063086
+            }
+          },
+          {
+            "name": "Lalita Cafe",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 19.7589517,
+              "lng": 99.6734592
+            }
+          },
+          {
+            "name": "Chiang Rai Night Bazaar",
+            "estimatedTime": "2 hours",
+            "coordinates": {
+              "lat": 19.9046674,
+              "lng": 99.834473
+            }
+          }
         ],
         "food": [
-          { "name": "Dinner after Wat Huay Pla Kang", "estimatedTime": "1 hour" },
-          { "name": "Lalita Cafe", "estimatedTime": "1 hour" }
+          {
+            "name": "Dinner after Wat Huay Pla Kang",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 19.7589517,
+              "lng": 99.6734592
+            }
+          },
+          {
+            "name": "Lalita Cafe",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 19.7589517,
+              "lng": 99.6734592
+            }
+          }
         ]
       },
       {
@@ -82,14 +284,56 @@
         "location": "Chiang Rai to Bangkok",
         "image": "/day5.png",
         "destinations": [
-          { "name": "White Temple", "estimatedTime": "1.5 hours" },
-          { "name": "Blue Temple", "estimatedTime": "1 hour" },
-          { "name": "Airport", "estimatedTime": "2 hours (waiting)" },
-          { "name": "Pratunam Market", "estimatedTime": "2 hours" }
+          {
+            "name": "White Temple",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          },
+          {
+            "name": "Blue Temple",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          },
+          {
+            "name": "Airport",
+            "estimatedTime": "2 hours (waiting)",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          },
+          {
+            "name": "Pratunam Market",
+            "estimatedTime": "2 hours",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          }
         ],
         "food": [
-          { "name": "Lunch after Blue Temple - Khao Soi", "estimatedTime": "1 hour" },
-          { "name": "Coffee", "estimatedTime": "30 mins" }
+          {
+            "name": "Lunch after Blue Temple - Khao Soi",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          },
+          {
+            "name": "Coffee",
+            "estimatedTime": "30 mins",
+            "coordinates": {
+              "lat": 13.7563,
+              "lng": 100.5018
+            }
+          }
         ]
       },
       {
@@ -98,15 +342,64 @@
         "location": "Bangkok",
         "image": "/day6.png",
         "destinations": [
-          { "name": "Icon Siam", "estimatedTime": "3 hours" },
-          { "name": "Yannawa Temple", "estimatedTime": "1 hour" },
-          { "name": "Kuay Jab Mr Joe", "estimatedTime": "45 mins" },
-          { "name": "Terminal 21 Rama 3", "estimatedTime": "2 hours" },
-          { "name": "Asiatique (dinner cruise)", "estimatedTime": "3 hours" }
+          {
+            "name": "Icon Siam",
+            "estimatedTime": "3 hours",
+            "coordinates": {
+              "lat": 13.7268227,
+              "lng": 100.510294
+            }
+          },
+          {
+            "name": "Yannawa Temple",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7010683,
+              "lng": 100.539063
+            }
+          },
+          {
+            "name": "Kuay Jab Mr Joe",
+            "estimatedTime": "45 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Terminal 21 Rama 3",
+            "estimatedTime": "2 hours",
+            "coordinates": {
+              "lat": 13.6886251,
+              "lng": 100.5053719
+            }
+          },
+          {
+            "name": "Asiatique (dinner cruise)",
+            "estimatedTime": "3 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          }
         ],
         "food": [
-          { "name": "Morning coffee: Pang Cha @Icon Siam", "estimatedTime": "45 mins" },
-          { "name": "Lunch after Yannawa Temple: Kuay Jab Mr Joe", "estimatedTime": "1 hour" }
+          {
+            "name": "Morning coffee: Pang Cha @Icon Siam",
+            "estimatedTime": "45 mins",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Lunch after Yannawa Temple: Kuay Jab Mr Joe",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          }
         ]
       },
       {
@@ -115,14 +408,56 @@
         "location": "Bangkok",
         "image": "/day7.png",
         "destinations": [
-          { "name": "Wat Saket", "estimatedTime": "1.5 hours" },
-          { "name": "Jodd Fair Rama", "estimatedTime": "2.5 hours" },
-          { "name": "Tofu Skin Care", "estimatedTime": "1 hour" },
-          { "name": "Big C", "estimatedTime": "2 hours" }
+          {
+            "name": "Wat Saket",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7538492,
+              "lng": 100.5066941
+            }
+          },
+          {
+            "name": "Jodd Fair Rama",
+            "estimatedTime": "2.5 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Tofu Skin Care",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Big C",
+            "estimatedTime": "2 hours",
+            "coordinates": {
+              "lat": 13.8941818,
+              "lng": 100.5602527
+            }
+          }
         ],
         "food": [
-          { "name": "Lunch near Wat Welunaram: ?", "estimatedTime": "1 hour" },
-          { "name": "Dinner at Jodd Fair", "estimatedTime": "1.5 hours" }
+          {
+            "name": "Lunch near Wat Welunaram: ?",
+            "estimatedTime": "1 hour",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          },
+          {
+            "name": "Dinner at Jodd Fair",
+            "estimatedTime": "1.5 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          }
         ]
       },
       {
@@ -131,7 +466,14 @@
         "location": "Bangkok",
         "image": "/day8.png",
         "destinations": [
-          { "name": "(pulang ke airport BKK)", "estimatedTime": "2 hours" }
+          {
+            "name": "(pulang ke airport BKK)",
+            "estimatedTime": "2 hours",
+            "coordinates": {
+              "lat": 13.7524938,
+              "lng": 100.4935089
+            }
+          }
         ],
         "food": []
       }
@@ -143,7 +485,13 @@
     "date": "February 2027",
     "startDate": "2027-02-01T00:00:00",
     "subtitle": "A journey through night markets, mountains, and modern marvels.",
-    "stats": { "days": 7, "cities": 3, "temples": 5, "food": 15, "shopping": 5 },
+    "stats": {
+      "days": 7,
+      "cities": 3,
+      "temples": 5,
+      "food": 15,
+      "shopping": 5
+    },
     "coverImage": "/taiwan.png",
     "itinerary": []
   }
