@@ -194,6 +194,17 @@ const DayCard = ({ dayData, isActive, onClick }) => {
 };
 
 const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  // Mapping titles to photo spots
+  const photoSpots = {
+    'Siam Paragon': '/siam_paragon.png',
+    'Wat Arun': '/wat_arun.png',
+    'White Temple': '/white_temple.png'
+  };
+
+  const photoUrl = photoSpots[title];
+
   return (
     <div className="flex gap-4 animate-fade-in delay-2" style={{ position: 'relative', marginBottom: '2rem' }}>
       <div className="timeline-line" style={{ position: 'absolute', left: '19px', top: '40px', bottom: '-20px', width: '2px', background: 'var(--surface-border)', zIndex: 0 }} />
@@ -206,7 +217,11 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
       >
         <Icon size={20} color={type === 'food' ? '#f87171' : 'var(--accent)'} />
       </div>
-      <div className="glass-panel flex-col" style={{ flex: 1, padding: '1.5rem', overflow: 'hidden' }}>
+      <div 
+        className="glass-panel flex-col" 
+        style={{ flex: 1, padding: '1.5rem', overflow: 'hidden', cursor: photoUrl ? 'pointer' : 'default' }}
+        onClick={() => { if (photoUrl) setExpanded(!expanded); }}
+      >
         <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
           <h4 style={{ fontSize: '1.2rem', margin: 0 }}>{title}</h4>
           {estimatedTime && (
@@ -216,10 +231,41 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.9rem' }}>
-          {type === 'destination' ? <MapPin size={14} /> : <Utensils size={14} />}
-          <span>{type === 'destination' ? 'Destination' : 'Dining'}</span>
+        <div className="flex items-center justify-between text-muted" style={{ fontSize: '0.9rem' }}>
+          <div className="flex items-center gap-2">
+            {type === 'destination' ? <MapPin size={14} /> : <Utensils size={14} />}
+            <span>{type === 'destination' ? 'Destination' : 'Dining'}</span>
+          </div>
+          {photoUrl && (
+            <span style={{ color: 'var(--accent)', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
+              {expanded ? 'Hide Photo Spot' : 'View Top Photo Spot'}
+            </span>
+          )}
         </div>
+
+        {/* Photo Spot Expansion */}
+        {photoUrl && (
+          <div 
+            style={{ 
+              height: expanded ? '250px' : '0', 
+              marginTop: expanded ? '1.5rem' : '0',
+              opacity: expanded ? 1 : 0,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            <img 
+              src={photoUrl} 
+              alt={`Top photo spot at ${title}`} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 500 }}>Top Photo Spot (2025-2026)</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -345,8 +391,8 @@ const TripViewer = ({ trips }) => {
                       scrollWheelZoom={false}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; Google Maps'
+                        url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
                       />
                       {allPlaces.map((place, idx) => (
                         <Marker key={idx} position={[place.coordinates.lat, place.coordinates.lng]}>
