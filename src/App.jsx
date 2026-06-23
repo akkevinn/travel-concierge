@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown, Instagram } from 'lucide-react';
+import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown, Camera } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -243,7 +243,7 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
               fontWeight: 500
             }}
           >
-            <Instagram size={14} />
+            <Camera size={14} />
             Explore #{hashtag}
           </a>
         </div>
