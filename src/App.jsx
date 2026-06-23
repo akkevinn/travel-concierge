@@ -1,8 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation } from 'lucide-react';
+import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe } from 'lucide-react';
 import './index.css';
 
-const Hero = ({ bgImage, location }) => {
+// --- Dashboard Components ---
+
+const DashboardHero = () => (
+  <div className="hero-container" style={{ position: 'relative', height: '40vh', overflow: 'hidden', borderRadius: '0 0 var(--radius) var(--radius)', background: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)' }}>
+    <div className="container flex-col justify-end" style={{ height: '100%', position: 'relative', zIndex: 10, paddingBottom: '3rem' }}>
+      <div className="flex items-center gap-3" style={{ marginBottom: '1rem' }}>
+        <Globe size={32} className="text-accent" />
+        <h1 className="animate-fade-in" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', margin: 0 }}>
+          My <span className="text-gradient">Journeys</span>
+        </h1>
+      </div>
+      <p className="text-muted animate-fade-in delay-1" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
+        Select a trip below to view your interactive concierge and itinerary.
+      </p>
+    </div>
+  </div>
+);
+
+const TripCard = ({ trip, onClick }) => (
+  <div 
+    className="glass-panel" 
+    onClick={onClick}
+    style={{ 
+      cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    <div style={{ height: '200px', width: '100%', overflow: 'hidden', position: 'relative' }}>
+      <img 
+        src={trip.coverImage} 
+        alt={trip.title} 
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} 
+        className="trip-card-image"
+      />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(11, 15, 25, 0.9), transparent)' }} />
+    </div>
+    <div style={{ padding: '1.5rem', position: 'relative', zIndex: 2, marginTop: '-50px' }}>
+      <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{trip.title}</h3>
+      <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.95rem' }}>
+        <Calendar size={16} className="text-accent" />
+        <span>{trip.date}</span>
+      </div>
+    </div>
+  </div>
+);
+
+// --- Trip Viewer Components ---
+
+const Hero = ({ bgImage, location, onBack }) => {
   return (
     <div className="hero-container" style={{ position: 'relative', height: '60vh', overflow: 'hidden', borderRadius: '0 0 var(--radius) var(--radius)' }}>
       <div 
@@ -12,14 +60,25 @@ const Hero = ({ bgImage, location }) => {
           transition: 'background-image 0.5s ease-in-out'
         }} 
       />
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(11, 15, 25, 0.2), var(--bg-color))' }} />
-      <div className="container flex-col justify-end" style={{ height: '100%', position: 'relative', zIndex: 10, paddingBottom: '4rem' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(11, 15, 25, 0.4), var(--bg-color))' }} />
+      
+      <div className="container" style={{ position: 'relative', zIndex: 10, paddingTop: '2rem' }}>
+        <button 
+          onClick={onBack}
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', 
+            color: '#fff', padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '0.5rem', backdropFilter: 'blur(10px)'
+          }}
+        >
+          <ArrowLeft size={16} /> Back to Trips
+        </button>
+      </div>
+
+      <div className="container flex-col justify-end" style={{ height: 'calc(100% - 4rem)', position: 'relative', zIndex: 10, paddingBottom: '4rem' }}>
         <h1 className="animate-fade-in" style={{ marginBottom: '1rem' }}>
           Explore <span className="text-gradient">{location}</span>
         </h1>
-        <p className="text-muted animate-fade-in delay-1" style={{ fontSize: '1.2rem', maxWidth: '600px' }}>
-          Your personalized interactive travel concierge for an unforgettable journey.
-        </p>
       </div>
     </div>
   );
@@ -93,15 +152,12 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
               padding: '0.25rem 0.5rem',
               borderRadius: '4px',
             }}
-            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-main)'}
-            onMouseOut={(e) => e.currentTarget.style.color = isMapOpen ? 'var(--accent)' : 'var(--text-muted)'}
           >
             <MapPin size={14} />
             {isMapOpen ? 'Hide Map' : 'View on Map'}
           </button>
         </div>
 
-        {/* Map Embed Container */}
         <div 
           style={{ 
             height: isMapOpen ? '200px' : '0', 
@@ -129,33 +185,30 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
   );
 };
 
-const App = () => {
+const TripViewer = ({ trip, onBack }) => {
   const [activeDay, setActiveDay] = useState(0);
-  const [itineraryData, setItineraryData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/itinerary.json')
-      .then(res => res.json())
-      .then(data => {
-        setItineraryData(data);
-        setLoading(false);
-      })
-      .catch(err => console.error("Failed to load itinerary", err));
-  }, []);
-
-  if (loading || itineraryData.length === 0) {
-    return <div className="app-container flex items-center justify-center" style={{ height: '100vh' }}>Loading...</div>;
+  if (!trip.itinerary || trip.itinerary.length === 0) {
+    return (
+      <div className="app-container">
+        <Hero bgImage={trip.coverImage} location={trip.title} onBack={onBack} />
+        <div className="container" style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '4rem' }}>
+            <h2 style={{ marginBottom: '1rem' }}>Itinerary Coming Soon</h2>
+            <p className="text-muted">The schedule for {trip.title} is currently being planned.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const activeData = itineraryData[activeDay];
+  const activeData = trip.itinerary[activeDay];
 
   return (
     <div className="app-container">
-      <Hero bgImage={activeData.image} location={activeData.location} />
+      <Hero bgImage={activeData.image} location={activeData.location} onBack={onBack} />
       
       <div className="container" style={{ marginTop: '-2rem', position: 'relative', zIndex: 20 }}>
-        {/* Day Selector Horizontal Scroll */}
         <div 
           className="flex gap-4" 
           style={{ 
@@ -163,7 +216,7 @@ const App = () => {
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          {itineraryData.map((day, idx) => (
+          {trip.itinerary.map((day, idx) => (
             <DayCard 
               key={idx} 
               dayData={day} 
@@ -173,7 +226,6 @@ const App = () => {
           ))}
         </div>
 
-        {/* Itinerary Details */}
         <div className="section">
           <div className="flex items-center justify-between" style={{ marginBottom: '3rem' }}>
             <h2>Day {activeData.day} Itinerary</h2>
@@ -210,6 +262,52 @@ const App = () => {
               </div>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App ---
+
+const App = () => {
+  const [trips, setTrips] = useState([]);
+  const [selectedTripId, setSelectedTripId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/trips.json')
+      .then(res => res.json())
+      .then(data => {
+        setTrips(data);
+        setLoading(false);
+      })
+      .catch(err => console.error("Failed to load trips", err));
+  }, []);
+
+  if (loading) {
+    return <div className="app-container flex items-center justify-center" style={{ height: '100vh' }}>Loading...</div>;
+  }
+
+  const selectedTrip = trips.find(t => t.id === selectedTripId);
+
+  if (selectedTrip) {
+    return <TripViewer trip={selectedTrip} onBack={() => setSelectedTripId(null)} />;
+  }
+
+  return (
+    <div className="app-container" style={{ minHeight: '100vh' }}>
+      <DashboardHero />
+      <div className="container section" style={{ paddingTop: '4rem' }}>
+        <h2 style={{ marginBottom: '2rem' }}>All Trips</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+          {trips.map(trip => (
+            <TripCard 
+              key={trip.id} 
+              trip={trip} 
+              onClick={() => setSelectedTripId(trip.id)} 
+            />
+          ))}
         </div>
       </div>
     </div>
