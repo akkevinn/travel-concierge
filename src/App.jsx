@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe } from 'lucide-react';
+import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown } from 'lucide-react';
 import './index.css';
 
 // --- Dashboard Components ---
@@ -10,7 +10,7 @@ const DashboardHero = () => (
     <div className="container flex-col justify-end" style={{ height: '100%', position: 'relative', zIndex: 10, paddingBottom: '3rem' }}>
       <div className="flex items-center gap-3" style={{ marginBottom: '1rem' }}>
         <Globe size={32} className="text-accent" />
-        <h1 className="animate-fade-in" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', margin: 0 }}>
+        <h1 className="animate-fade-in font-serif" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', margin: 0 }}>
           My <span className="text-gradient">Journeys</span>
         </h1>
       </div>
@@ -42,7 +42,7 @@ const TripCard = ({ trip }) => {
         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(11, 15, 25, 0.9), transparent)' }} />
       </div>
       <div style={{ padding: '1.5rem', position: 'relative', zIndex: 2, marginTop: '-50px' }}>
-        <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{trip.title}</h3>
+        <h3 className="font-serif" style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{trip.title}</h3>
         <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.95rem' }}>
           <Calendar size={16} className="text-accent" />
           <span>{trip.date}</span>
@@ -54,36 +54,105 @@ const TripCard = ({ trip }) => {
 
 // --- Trip Viewer Components ---
 
-const Hero = ({ bgImage, location }) => {
-  const navigate = useNavigate();
+const Countdown = ({ targetDate }) => {
+  const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+
+  useEffect(() => {
+    if (!targetDate) return;
+    
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = new Date(targetDate).getTime() - now;
+
+      if (distance < 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      setTimeLeft({
+        days: String(Math.floor(distance / (1000 * 60 * 60 * 24))).padStart(2, '0'),
+        hours: String(Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0'),
+        minutes: String(Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0'),
+        seconds: String(Math.floor((distance % (1000 * 60)) / 1000)).padStart(2, '0')
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
   return (
-    <div className="hero-container" style={{ position: 'relative', height: '60vh', overflow: 'hidden', borderRadius: '0 0 var(--radius) var(--radius)' }}>
+    <div className="flex justify-center gap-4 animate-fade-in delay-2">
+      <div className="countdown-box"><div className="countdown-number">{timeLeft.days}</div><div className="countdown-label">Days</div></div>
+      <div className="countdown-box"><div className="countdown-number">{timeLeft.hours}</div><div className="countdown-label">Hrs</div></div>
+      <div className="countdown-box"><div className="countdown-number">{timeLeft.minutes}</div><div className="countdown-label">Min</div></div>
+      <div className="countdown-box"><div className="countdown-number">{timeLeft.seconds}</div><div className="countdown-label">Sec</div></div>
+    </div>
+  );
+};
+
+const TripHero = ({ trip }) => {
+  const navigate = useNavigate();
+  const titleParts = trip.title.split('&');
+  
+  return (
+    <div className="hero-container" style={{ position: 'relative', height: '100vh', minHeight: '800px', overflow: 'hidden' }}>
       <div 
         style={{ 
           position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
-          backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center',
-          transition: 'background-image 0.5s ease-in-out'
+          backgroundImage: `url(${trip.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center'
         }} 
       />
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(11, 15, 25, 0.4), var(--bg-color))' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to bottom, rgba(11, 15, 25, 0.8), var(--bg-color))' }} />
       
       <div className="container" style={{ position: 'relative', zIndex: 10, paddingTop: '2rem' }}>
         <button 
           onClick={() => navigate('/')}
           style={{ 
-            background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', 
-            color: '#fff', padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '0.5rem', backdropFilter: 'blur(10px)'
+            background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem', opacity: 0.7
           }}
         >
-          <ArrowLeft size={16} /> Back to Trips
+          <ArrowLeft size={16} /> Back to Dashboard
         </button>
       </div>
 
-      <div className="container flex-col justify-end" style={{ height: 'calc(100% - 4rem)', position: 'relative', zIndex: 10, paddingBottom: '4rem' }}>
-        <h1 className="animate-fade-in" style={{ marginBottom: '1rem' }}>
-          Explore <span className="text-gradient">{location}</span>
+      <div className="container flex-col justify-center items-center text-center" style={{ height: 'calc(100% - 100px)', position: 'relative', zIndex: 10 }}>
+        {trip.stats && (
+          <div className="hero-pill animate-fade-in">
+            {trip.date.toUpperCase()} &middot; {trip.stats.days} DAYS &middot; {trip.stats.cities} CITIES
+          </div>
+        )}
+        
+        <h1 className="hero-title animate-fade-in delay-1">
+          {titleParts[0].trim()}
+          {titleParts.length > 1 && <> <span className="hero-title-amp">&</span> {titleParts[1].trim()}</>}
         </h1>
+        
+        <p className="hero-subtitle animate-fade-in delay-2">
+          {trip.subtitle}
+        </p>
+
+        <Countdown targetDate={trip.startDate} />
+
+        {trip.stats && (
+          <div className="stats-row animate-fade-in delay-3">
+            <div className="stat-item"><div className="stat-number">{trip.stats.days}</div><div className="stat-label">Days</div></div>
+            <div className="stat-item"><div className="stat-number">{trip.stats.cities}</div><div className="stat-label">Cities</div></div>
+            <div className="stat-item"><div className="stat-number">{trip.stats.temples}</div><div className="stat-label">Temples</div></div>
+            <div className="stat-item"><div className="stat-number">{trip.stats.food}</div><div className="stat-label">Food Stops</div></div>
+            <div className="stat-item"><div className="stat-number">{trip.stats.shopping}</div><div className="stat-label">Shopping</div></div>
+          </div>
+        )}
+
+        <button 
+          className="btn-primary animate-fade-in delay-3"
+          onClick={() => {
+            const el = document.getElementById('itinerary-start');
+            if(el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          Plan the journey <ArrowDown size={18} />
+        </button>
       </div>
     </div>
   );
@@ -104,16 +173,13 @@ const DayCard = ({ dayData, isActive, onClick }) => {
         <Calendar size={16} />
         <span>Day {dayData.day}</span>
       </div>
-      <h3 style={{ marginBottom: '0.25rem' }}>{dayData.date}</h3>
+      <h3 className="font-serif" style={{ marginBottom: '0.25rem' }}>{dayData.date}</h3>
       <p className="text-muted" style={{ fontSize: '0.85rem' }}>{dayData.location}</p>
     </div>
   );
 };
 
-const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const mapQuery = encodeURIComponent(`${title} ${city}`);
-
+const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
   return (
     <div className="flex gap-4 animate-fade-in delay-2" style={{ position: 'relative', marginBottom: '2rem' }}>
       <div className="timeline-line" style={{ position: 'absolute', left: '19px', top: '40px', bottom: '-20px', width: '2px', background: 'var(--surface-border)', zIndex: 0 }} />
@@ -136,57 +202,9 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
             </div>
           )}
         </div>
-        <div className="flex justify-between items-center text-muted" style={{ fontSize: '0.9rem' }}>
-          <div className="flex items-center gap-2">
-            {type === 'destination' ? <MapPin size={14} /> : <Utensils size={14} />}
-            <span>{type === 'destination' ? 'Destination' : 'Dining'}</span>
-          </div>
-          
-          <button 
-            onClick={() => setIsMapOpen(!isMapOpen)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: isMapOpen ? 'var(--accent)' : 'var(--text-muted)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.25rem',
-              fontSize: '0.85rem',
-              transition: 'color 0.2s',
-              padding: '0.25rem 0.5rem',
-              borderRadius: '4px',
-            }}
-            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-main)'}
-            onMouseOut={(e) => e.currentTarget.style.color = isMapOpen ? 'var(--accent)' : 'var(--text-muted)'}
-          >
-            <MapPin size={14} />
-            {isMapOpen ? 'Hide Map' : 'View on Map'}
-          </button>
-        </div>
-
-        {/* Map Embed Container */}
-        <div 
-          style={{ 
-            height: isMapOpen ? '200px' : '0', 
-            marginTop: isMapOpen ? '1rem' : '0',
-            opacity: isMapOpen ? 1 : 0,
-            transition: 'all 0.3s ease-in-out',
-            borderRadius: '8px',
-            overflow: 'hidden'
-          }}
-        >
-          {isMapOpen && (
-            <iframe
-              title={`Map of ${title}`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              allowFullScreen
-              src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-            />
-          )}
+        <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.9rem' }}>
+          {type === 'destination' ? <MapPin size={14} /> : <Utensils size={14} />}
+          <span>{type === 'destination' ? 'Destination' : 'Dining'}</span>
         </div>
       </div>
     </div>
@@ -206,29 +224,54 @@ const TripViewer = ({ trips }) => {
   if (!trip.itinerary || trip.itinerary.length === 0) {
     return (
       <div className="app-container">
-        <Hero bgImage={trip.coverImage} location={trip.title} />
-        <div className="container" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <div className="glass-panel" style={{ padding: '4rem' }}>
-            <h2 style={{ marginBottom: '1rem' }}>Itinerary Coming Soon</h2>
-            <p className="text-muted">The schedule for {trip.title} is currently being planned.</p>
-          </div>
-        </div>
+        <TripHero trip={trip} />
       </div>
     );
   }
 
   const activeData = trip.itinerary[activeDay];
 
+  // Map generation logic
+  const allPlaces = [...activeData.destinations, ...activeData.food].map(p => p.name + ' ' + activeData.location);
+  let mapUrl = '';
+  if (allPlaces.length === 1) {
+    mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(allPlaces[0])}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+  } else if (allPlaces.length > 1) {
+    const origin = allPlaces[0];
+    const rest = allPlaces.slice(1);
+    const daddr = rest.map(p => encodeURIComponent(p)).join('+to:');
+    mapUrl = `https://maps.google.com/maps?saddr=${encodeURIComponent(origin)}&daddr=${daddr}&output=embed`;
+  }
+
   return (
     <div className="app-container">
-      <Hero bgImage={activeData.image} location={activeData.location} />
+      <TripHero trip={trip} />
       
-      <div className="container" style={{ marginTop: '-2rem', position: 'relative', zIndex: 20 }}>
+      <div id="itinerary-start" className="container" style={{ position: 'relative', zIndex: 20 }}>
+        {/* Dynamic Day Cover Image Banner */}
+        <div 
+          style={{ 
+            height: '250px', 
+            borderRadius: 'var(--radius)', 
+            overflow: 'hidden', 
+            marginBottom: '2rem',
+            position: 'relative' 
+          }}
+        >
+          <div 
+            style={{ 
+              position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', 
+              backgroundImage: `url(${activeData.image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+            }} 
+          />
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, var(--bg-color), transparent)' }} />
+        </div>
+
         <div 
           className="flex gap-4" 
           style={{ 
             overflowX: 'auto', padding: '1rem 0', scrollbarWidth: 'none', msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch', marginTop: '-100px', position: 'relative', zIndex: 10
           }}
         >
           {trip.itinerary.map((day, idx) => (
@@ -241,41 +284,66 @@ const TripViewer = ({ trips }) => {
           ))}
         </div>
 
-        <div className="section">
+        <div className="section" style={{ paddingTop: '2rem' }}>
           <div className="flex items-center justify-between" style={{ marginBottom: '3rem' }}>
-            <h2>Day {activeData.day} Itinerary</h2>
+            <h2 className="font-serif">Day {activeData.day} Itinerary</h2>
             <div className="glass-panel flex items-center gap-2" style={{ padding: '0.5rem 1rem', borderRadius: '20px' }}>
               <Navigation size={16} className="text-accent" />
               <span style={{ fontSize: '0.9rem' }}>{activeData.location}</span>
             </div>
           </div>
 
-          <div style={{ maxWidth: '800px' }}>
-            {activeData.destinations.map((dest, i) => (
-              <TimelineItem 
-                key={`dest-${i}`} 
-                title={dest.name} 
-                estimatedTime={dest.estimatedTime}
-                icon={MapPin} 
-                type="destination" 
-                city={activeData.location}
-              />
-            ))}
-            {activeData.food.map((food, i) => (
-              <TimelineItem 
-                key={`food-${i}`} 
-                title={food.name} 
-                estimatedTime={food.estimatedTime}
-                icon={Coffee} 
-                type="food" 
-                city={activeData.location}
-              />
-            ))}
-            {activeData.destinations.length === 0 && activeData.food.length === 0 && (
-              <div className="glass-panel flex-col items-center justify-center" style={{ padding: '4rem', textAlign: 'center' }}>
-                <p className="text-muted">No scheduled activities for this day.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
+            {/* Timeline Column */}
+            <div>
+              {activeData.destinations.map((dest, i) => (
+                <TimelineItem 
+                  key={`dest-${i}`} 
+                  title={dest.name} 
+                  estimatedTime={dest.estimatedTime}
+                  icon={MapPin} 
+                  type="destination" 
+                />
+              ))}
+              {activeData.food.map((food, i) => (
+                <TimelineItem 
+                  key={`food-${i}`} 
+                  title={food.name} 
+                  estimatedTime={food.estimatedTime}
+                  icon={Coffee} 
+                  type="food" 
+                />
+              ))}
+              {activeData.destinations.length === 0 && activeData.food.length === 0 && (
+                <div className="glass-panel flex-col items-center justify-center" style={{ padding: '4rem', textAlign: 'center' }}>
+                  <p className="text-muted">No scheduled activities for this day.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Map Column */}
+            <div>
+              <div style={{ position: 'sticky', top: '2rem' }}>
+                <h3 className="font-serif" style={{ marginBottom: '1.5rem', color: 'var(--accent)' }}>Daily Route</h3>
+                {mapUrl ? (
+                  <div className="glass-panel animate-fade-in" style={{ height: '600px', overflow: 'hidden' }}>
+                    <iframe
+                      title={`Route Map Day ${activeData.day}`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      src={mapUrl}
+                    />
+                  </div>
+                ) : (
+                  <div className="glass-panel flex items-center justify-center" style={{ height: '600px' }}>
+                    <p className="text-muted">No route data available for this day.</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -287,7 +355,7 @@ const Dashboard = ({ trips }) => (
   <div className="app-container" style={{ minHeight: '100vh' }}>
     <DashboardHero />
     <div className="container section" style={{ paddingTop: '4rem' }}>
-      <h2 style={{ marginBottom: '2rem' }}>All Trips</h2>
+      <h2 className="font-serif" style={{ marginBottom: '2rem' }}>All Trips</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
         {trips.map(trip => (
           <TripCard key={trip.id} trip={trip} />

@@ -3,6 +3,9 @@
     "id": "bangkok-2026",
     "title": "Bangkok & Chiang Rai",
     "date": "14-21 November 2026",
+    "startDate": "2026-11-14T00:00:00",
+    "subtitle": "An 8-day journey through temples, markets & street feasts.",
+    "stats": { "days": 8, "cities": 2, "temples": 10, "food": 13, "shopping": 12 },
     "coverImage": "/bangkok.png",
     "itinerary": [
       {
@@ -138,6 +141,9 @@
     "id": "taiwan-2027",
     "title": "Taiwan Escape",
     "date": "February 2027",
+    "startDate": "2027-02-01T00:00:00",
+    "subtitle": "A journey through night markets, mountains, and modern marvels.",
+    "stats": { "days": 7, "cities": 3, "temples": 5, "food": 15, "shopping": 5 },
     "coverImage": "/taiwan.png",
     "itinerary": []
   }
