@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe } from 'lucide-react';
 import './index.css';
 
@@ -20,37 +21,41 @@ const DashboardHero = () => (
   </div>
 );
 
-const TripCard = ({ trip, onClick }) => (
-  <div 
-    className="glass-panel" 
-    onClick={onClick}
-    style={{ 
-      cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-      transition: 'all 0.3s ease'
-    }}
-  >
-    <div style={{ height: '200px', width: '100%', overflow: 'hidden', position: 'relative' }}>
-      <img 
-        src={trip.coverImage} 
-        alt={trip.title} 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} 
-        className="trip-card-image"
-      />
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(11, 15, 25, 0.9), transparent)' }} />
-    </div>
-    <div style={{ padding: '1.5rem', position: 'relative', zIndex: 2, marginTop: '-50px' }}>
-      <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{trip.title}</h3>
-      <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.95rem' }}>
-        <Calendar size={16} className="text-accent" />
-        <span>{trip.date}</span>
+const TripCard = ({ trip }) => {
+  const navigate = useNavigate();
+  return (
+    <div 
+      className="glass-panel" 
+      onClick={() => navigate(`/trip/${trip.id}`)}
+      style={{ 
+        cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div style={{ height: '200px', width: '100%', overflow: 'hidden', position: 'relative' }}>
+        <img 
+          src={trip.coverImage} 
+          alt={trip.title} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }} 
+          className="trip-card-image"
+        />
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(11, 15, 25, 0.9), transparent)' }} />
+      </div>
+      <div style={{ padding: '1.5rem', position: 'relative', zIndex: 2, marginTop: '-50px' }}>
+        <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>{trip.title}</h3>
+        <div className="flex items-center gap-2 text-muted" style={{ fontSize: '0.95rem' }}>
+          <Calendar size={16} className="text-accent" />
+          <span>{trip.date}</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- Trip Viewer Components ---
 
-const Hero = ({ bgImage, location, onBack }) => {
+const Hero = ({ bgImage, location }) => {
+  const navigate = useNavigate();
   return (
     <div className="hero-container" style={{ position: 'relative', height: '60vh', overflow: 'hidden', borderRadius: '0 0 var(--radius) var(--radius)' }}>
       <div 
@@ -64,7 +69,7 @@ const Hero = ({ bgImage, location, onBack }) => {
       
       <div className="container" style={{ position: 'relative', zIndex: 10, paddingTop: '2rem' }}>
         <button 
-          onClick={onBack}
+          onClick={() => navigate('/')}
           style={{ 
             background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', 
             color: '#fff', padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer',
@@ -152,12 +157,15 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
               padding: '0.25rem 0.5rem',
               borderRadius: '4px',
             }}
+            onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+            onMouseOut={(e) => e.currentTarget.style.color = isMapOpen ? 'var(--accent)' : 'var(--text-muted)'}
           >
             <MapPin size={14} />
             {isMapOpen ? 'Hide Map' : 'View on Map'}
           </button>
         </div>
 
+        {/* Map Embed Container */}
         <div 
           style={{ 
             height: isMapOpen ? '200px' : '0', 
@@ -185,13 +193,20 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type, city }) => {
   );
 };
 
-const TripViewer = ({ trip, onBack }) => {
+const TripViewer = ({ trips }) => {
+  const { id } = useParams();
   const [activeDay, setActiveDay] = useState(0);
+
+  const trip = trips.find(t => t.id === id);
+
+  if (!trip) {
+    return <div className="app-container flex items-center justify-center" style={{ height: '100vh' }}>Trip not found</div>;
+  }
 
   if (!trip.itinerary || trip.itinerary.length === 0) {
     return (
       <div className="app-container">
-        <Hero bgImage={trip.coverImage} location={trip.title} onBack={onBack} />
+        <Hero bgImage={trip.coverImage} location={trip.title} />
         <div className="container" style={{ marginTop: '2rem', textAlign: 'center' }}>
           <div className="glass-panel" style={{ padding: '4rem' }}>
             <h2 style={{ marginBottom: '1rem' }}>Itinerary Coming Soon</h2>
@@ -206,7 +221,7 @@ const TripViewer = ({ trip, onBack }) => {
 
   return (
     <div className="app-container">
-      <Hero bgImage={activeData.image} location={activeData.location} onBack={onBack} />
+      <Hero bgImage={activeData.image} location={activeData.location} />
       
       <div className="container" style={{ marginTop: '-2rem', position: 'relative', zIndex: 20 }}>
         <div 
@@ -268,11 +283,24 @@ const TripViewer = ({ trip, onBack }) => {
   );
 };
 
+const Dashboard = ({ trips }) => (
+  <div className="app-container" style={{ minHeight: '100vh' }}>
+    <DashboardHero />
+    <div className="container section" style={{ paddingTop: '4rem' }}>
+      <h2 style={{ marginBottom: '2rem' }}>All Trips</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
+        {trips.map(trip => (
+          <TripCard key={trip.id} trip={trip} />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 // --- Main App ---
 
 const App = () => {
   const [trips, setTrips] = useState([]);
-  const [selectedTripId, setSelectedTripId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -289,28 +317,13 @@ const App = () => {
     return <div className="app-container flex items-center justify-center" style={{ height: '100vh' }}>Loading...</div>;
   }
 
-  const selectedTrip = trips.find(t => t.id === selectedTripId);
-
-  if (selectedTrip) {
-    return <TripViewer trip={selectedTrip} onBack={() => setSelectedTripId(null)} />;
-  }
-
   return (
-    <div className="app-container" style={{ minHeight: '100vh' }}>
-      <DashboardHero />
-      <div className="container section" style={{ paddingTop: '4rem' }}>
-        <h2 style={{ marginBottom: '2rem' }}>All Trips</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '2rem' }}>
-          {trips.map(trip => (
-            <TripCard 
-              key={trip.id} 
-              trip={trip} 
-              onClick={() => setSelectedTripId(trip.id)} 
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard trips={trips} />} />
+        <Route path="/trip/:id" element={<TripViewer trips={trips} />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
