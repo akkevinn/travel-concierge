@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown } from 'lucide-react';
+import { MapPin, Calendar, Clock, Coffee, Utensils, Navigation, ArrowLeft, Globe, ArrowDown, Instagram } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -194,16 +194,9 @@ const DayCard = ({ dayData, isActive, onClick }) => {
 };
 
 const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  // Mapping titles to photo spots
-  const photoSpots = {
-    'Siam Paragon': '/siam_paragon.png',
-    'Wat Arun': '/wat_arun.png',
-    'White Temple': '/white_temple.png'
-  };
-
-  const photoUrl = photoSpots[title];
+  // Convert title to a valid instagram hashtag string (e.g. "Siam Paragon" -> "siamparagon")
+  const hashtag = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const instaUrl = `https://www.instagram.com/explore/tags/${hashtag}/`;
 
   return (
     <div className="flex gap-4 animate-fade-in delay-2" style={{ position: 'relative', marginBottom: '2rem' }}>
@@ -219,8 +212,7 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
       </div>
       <div 
         className="glass-panel flex-col" 
-        style={{ flex: 1, padding: '1.5rem', overflow: 'hidden', cursor: photoUrl ? 'pointer' : 'default' }}
-        onClick={() => { if (photoUrl) setExpanded(!expanded); }}
+        style={{ flex: 1, padding: '1.5rem', overflow: 'hidden' }}
       >
         <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
           <h4 style={{ fontSize: '1.2rem', margin: 0 }}>{title}</h4>
@@ -236,36 +228,25 @@ const TimelineItem = ({ title, estimatedTime, icon: Icon, type }) => {
             {type === 'destination' ? <MapPin size={14} /> : <Utensils size={14} />}
             <span>{type === 'destination' ? 'Destination' : 'Dining'}</span>
           </div>
-          {photoUrl && (
-            <span style={{ color: 'var(--accent)', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-              {expanded ? 'Hide Photo Spot' : 'View Top Photo Spot'}
-            </span>
-          )}
-        </div>
-
-        {/* Photo Spot Expansion */}
-        {photoUrl && (
-          <div 
+          <a 
+            href={instaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ 
-              height: expanded ? '250px' : '0', 
-              marginTop: expanded ? '1.5rem' : '0',
-              opacity: expanded ? 1 : 0,
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              position: 'relative'
+              color: '#E1306C', 
+              fontSize: '0.8rem', 
+              letterSpacing: '0.05em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              textDecoration: 'none',
+              fontWeight: 500
             }}
           >
-            <img 
-              src={photoUrl} 
-              alt={`Top photo spot at ${title}`} 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', padding: '1rem', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
-              <p style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 500 }}>Top Photo Spot (2025-2026)</p>
-            </div>
-          </div>
-        )}
+            <Instagram size={14} />
+            Explore #{hashtag}
+          </a>
+        </div>
       </div>
     </div>
   );
