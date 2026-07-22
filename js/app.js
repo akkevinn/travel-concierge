@@ -431,6 +431,29 @@
   function enterTrip() { history.pushState(null, "", "#trip"); showView("trip"); }
   function showDashboard() { history.pushState(null, "", "#"); showView("dashboard"); }
 
+  // Only the dashboard hash (empty / # / #journeys) shows the dashboard; in-page
+  // section anchors (#itinerary, #map, …) must keep the open trip visible.
+  function viewForHash() {
+    const h = location.hash;
+    return (!h || h === "#" || h === "#journeys") ? "dashboard" : "trip";
+  }
+
+  // Scroll an element to just under the sticky header. Uses a plain instant
+  // scroll (reliable everywhere) and asks for a smooth animation where the
+  // browser supports it — falling back gracefully if it doesn't.
+  function scrollToEl(target) {
+    const OFFSET = 72; // sticky topbar height
+    const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - OFFSET);
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try {
+      window.scrollTo({ top: top, behavior: reduce ? "auto" : "smooth" });
+    } catch (_) {
+      window.scrollTo(0, top);
+    }
+    // guarantee arrival even if the smooth animation is a no-op in this engine
+    setTimeout(() => { if (Math.abs(window.scrollY - top) > 4) window.scrollTo(0, top); }, 700);
+  }
+
   /* =================================================================
      BOOT
      ================================================================= */
@@ -455,9 +478,19 @@
 
     renderDashboard();
     $("#backBtn").addEventListener("click", showDashboard);
-    window.addEventListener("popstate", () =>
-      showView(location.hash === "#trip" ? "trip" : "dashboard"));
-    showView(location.hash === "#trip" ? "trip" : "dashboard");
+
+    // In-page anchors (nav + "Plan the journey"): smooth-scroll to the section
+    // instead of changing the hash, which would otherwise flip back to the dashboard.
+    $$('a[href^="#"]').forEach((a) => {
+      a.addEventListener("click", (e) => {
+        const id = a.getAttribute("href").slice(1);
+        const target = id && document.getElementById(id);
+        if (target) { e.preventDefault(); scrollToEl(target); }
+      });
+    });
+
+    window.addEventListener("popstate", () => showView(viewForHash()));
+    showView(viewForHash());
 
     // map needs a size recalc once visible
     setTimeout(() => map && map.invalidateSize(), 200);

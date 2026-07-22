@@ -33,7 +33,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 78px; }
+html { scroll-padding-top: 78px; }  /* smooth scrolling handled in JS (scrollToEl) */
 
 body {
   font-family: var(--sans);
