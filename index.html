@@ -24,11 +24,26 @@
   <!-- Ambient decorative gradient -->
   <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
 
+  <!-- ===== Dashboard (My Journeys) ===== -->
+  <section class="dashboard" id="dashboard">
+    <div class="dash-inner">
+      <header class="dash-head">
+        <h1 class="dash-title"><span class="brand-mark">✦</span> My Journeys</h1>
+        <p>Select a trip to open its interactive concierge &amp; itinerary.</p>
+      </header>
+      <h2 class="dash-subhead">All Trips</h2>
+      <div class="dash-grid" id="dashGrid"></div>
+    </div>
+  </section>
+
   <!-- ===== Top navigation ===== -->
   <header class="topbar" id="top">
-    <div class="brand">
-      <span class="brand-mark">✦</span>
-      <span class="brand-text"><span class="brand-full">Concierge<em>·</em></span>BKK&amp;CNX</span>
+    <div class="topbar-left">
+      <button class="back-btn" id="backBtn" type="button">← Journeys</button>
+      <div class="brand">
+        <span class="brand-mark">✦</span>
+        <span class="brand-text"><span class="brand-full">Concierge<em>·</em></span>BKK&amp;CNX</span>
+      </div>
     </div>
     <nav class="topnav">
       <a href="#itinerary">Itinerary</a>
@@ -41,6 +56,7 @@
 
   <!-- ===== Hero ===== -->
   <section class="hero">
+    <div class="hero-bg" id="heroBg" aria-hidden="true"></div>
     <div class="hero-eyebrow">14 – 21 November 2026 · 8 days · 2 cities</div>
     <h1 class="hero-title">Bangkok <span class="amp">&amp;</span> Chiang Rai</h1>
     <p class="hero-sub" id="hero-sub"></p>
@@ -71,7 +87,13 @@
       <!-- ===== Map ===== -->
       <div class="map-wrap" id="map">
         <div class="map-toolbar">
-          <div class="map-title" id="mapTitle">Map</div>
+          <div class="map-toolbar-top">
+            <div class="map-title" id="mapTitle">Map</div>
+            <div class="layer-toggle" id="layerToggle">
+              <button class="layer-btn active" data-layer="streets" type="button">Map</button>
+              <button class="layer-btn" data-layer="satellite" type="button">Satellite</button>
+            </div>
+          </div>
           <div class="map-filters" id="catFilters"></div>
         </div>
         <div id="leaflet"></div>

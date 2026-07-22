@@ -79,9 +79,9 @@ body {
 }
 .topnav a:hover::after { width: 100%; }
 @media (max-width: 620px){
-  .topbar { padding: 10px 16px; gap: 10px; }
-  .brand-full { display: none; }              /* show just "BKK&CNX" */
-  .brand-text { font-size: 14px; }
+  .topbar { padding: 10px 14px; gap: 10px; }
+  .brand { display: none; }                   /* back button takes the left slot */
+  .back-btn { font-size: 12.5px; padding: 6px 12px; }
   .topnav { gap: 14px; }
   .topnav a { font-size: 13px; }
   .topnav a:nth-child(n+4){ display:none; }   /* keep Itinerary · Map · Food */
@@ -217,14 +217,34 @@ body {
 /* day detail */
 .plan-detail { min-height: 200px; }
 .day-banner {
-  background: linear-gradient(150deg, var(--surface-2), var(--surface));
+  position: relative; overflow: hidden;
   border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 20px 22px; margin-bottom: 16px;
+  margin-bottom: 16px; min-height: 240px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background: var(--surface-2);
+  animation: bannerIn .45s ease;
 }
+.day-banner::before {              /* hero image */
+  content: ""; position: absolute; inset: 0;
+  background-image: var(--hero);
+  background-size: cover; background-position: center;
+  transform: scale(1.03);
+}
+.day-banner::after {               /* readability gradient: strong bottom + light top scrim */
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(to top,
+      rgba(9,15,13,.97) 0%, rgba(9,15,13,.82) 28%,
+      rgba(9,15,13,.45) 60%, rgba(9,15,13,.12) 100%),
+    linear-gradient(to bottom,
+      rgba(9,15,13,.62) 0%, rgba(9,15,13,.15) 22%, rgba(9,15,13,0) 42%);
+}
+.day-banner .db-inner { position: relative; z-index: 1; padding: 20px 22px; }
 .day-banner .db-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
 .day-banner .db-city { color: var(--jade); font-weight: 600; }
-.day-banner h3 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 8px 0 6px; }
-.day-banner p { color: var(--muted); font-size: 14px; }
+.day-banner h3 { font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 8px 0 6px; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+.day-banner p { color: var(--muted); font-size: 14px; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
+@keyframes bannerIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* stop timeline */
 .stop-list { position: relative; padding-left: 26px; }
@@ -262,7 +282,7 @@ body {
   padding: 7px 10px; border-radius: 0 8px 8px 0;
 }
 .stop-tip b { color: var(--gold); font-weight: 600; }
-.stop-actions { display: flex; gap: 10px; margin-top: 10px; }
+.stop-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
 .stop-btn {
   cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 500;
   color: var(--muted); background: transparent; border: 1px solid var(--line);
@@ -279,7 +299,16 @@ body {
 }
 @media (max-width: 900px){ .map-wrap { position: static; } }
 .map-toolbar { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line-soft); }
+.map-toolbar-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .map-title { font-family: var(--serif); font-size: 18px; }
+.layer-toggle { display: inline-flex; gap: 3px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.layer-btn {
+  cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--muted); background: transparent; border: none; border-radius: 999px;
+  padding: 5px 13px; transition: color .16s, background .16s;
+}
+.layer-btn:hover { color: var(--text); }
+.layer-btn.active { color: var(--bg); background: linear-gradient(135deg, var(--gold-soft), var(--gold-deep)); font-weight: 600; }
 .map-filters { display: flex; flex-wrap: wrap; gap: 6px; }
 .cat-chip {
   cursor: pointer; font-size: 11.5px; font-weight: 500;
@@ -386,5 +415,86 @@ body {
 .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce){
   .reveal { opacity: 1; transform: none; transition: none; }
+  .day-banner { animation: none; }
   html { scroll-behavior: auto; }
 }
+
+/* ---------- Dashboard (My Journeys) ---------- */
+.dashboard {
+  position: fixed; inset: 0; z-index: 3000; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background:
+    radial-gradient(1000px 600px at 75% -10%, rgba(76,196,163,.12), transparent 60%),
+    radial-gradient(800px 500px at 0% 5%, rgba(230,192,106,.10), transparent 55%),
+    var(--bg);
+  padding: clamp(30px, 8vw, 84px) clamp(16px, 4vw, 40px) 64px;
+  animation: bannerIn .4s ease;
+}
+.dashboard.hidden { display: none; }
+body.dash-open { overflow: hidden; }
+.dash-inner { max-width: 1000px; margin: 0 auto; }
+.dash-title { font-family: var(--serif); font-weight: 500; font-size: clamp(34px, 8vw, 58px); letter-spacing: -.5px; }
+.dash-title .brand-mark { color: var(--gold); font-size: .8em; }
+.dash-head p { color: var(--muted); margin-top: 12px; font-size: clamp(15px, 2.4vw, 18px); max-width: 46ch; }
+.dash-subhead { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 5vw, 36px); margin: clamp(28px, 6vw, 52px) 0 18px; }
+.dash-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 760px){ .dash-grid { grid-template-columns: 1fr 1fr; } }
+
+.trip-card {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--line); min-height: 300px; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  background: var(--surface-2);
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.trip-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: var(--shadow); }
+.trip-cover { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform .5s; }
+.trip-card:hover .trip-cover { transform: scale(1.05); }
+.trip-scrim { position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(9,15,13,.95) 0%, rgba(9,15,13,.5) 45%, rgba(9,15,13,.06) 100%); }
+.trip-info { position: relative; z-index: 1; padding: 22px 24px; }
+.trip-info h3 { font-family: var(--serif); font-weight: 500; font-size: clamp(24px, 5vw, 32px); text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+.trip-date { display: inline-flex; align-items: center; gap: 7px; color: var(--gold-soft); font-size: 14px; margin-top: 7px; }
+.trip-sub { color: var(--muted); font-size: 13.5px; margin-top: 9px; max-width: 42ch; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
+.trip-go {
+  position: absolute; top: 16px; right: 16px; z-index: 1;
+  font-size: 12.5px; font-weight: 600; color: var(--bg);
+  background: linear-gradient(135deg, var(--gold-soft), var(--gold-deep));
+  padding: 6px 13px; border-radius: 999px; opacity: 0; transform: translateY(-4px); transition: all .2s;
+}
+.trip-card:hover .trip-go { opacity: 1; transform: none; }
+.trip-badge {
+  position: absolute; top: 16px; right: 16px; z-index: 1;
+  font-size: 11px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--muted); background: rgba(0,0,0,.55); border: 1px solid var(--line);
+  padding: 5px 11px; border-radius: 999px; backdrop-filter: blur(4px);
+}
+.trip-card.soon { cursor: default; }
+.trip-card.soon:hover { transform: none; border-color: var(--line); box-shadow: none; }
+.trip-card.soon:hover .trip-cover { transform: none; }
+.trip-card.soon .trip-cover { filter: saturate(.55) brightness(.62); }
+
+/* ---------- Hero cover image ---------- */
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-size: cover; background-position: center 28%; opacity: .22;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.95), rgba(0,0,0,.55) 55%, transparent 92%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.95), rgba(0,0,0,.55) 55%, transparent 92%);
+}
+.hero > *:not(.hero-bg) { position: relative; z-index: 1; }
+
+/* ---------- Topbar: back button ---------- */
+.topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.back-btn {
+  cursor: pointer; font-family: var(--sans); font-size: 13px; font-weight: 600;
+  color: var(--gold-soft); background: rgba(230,192,106,.08);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+  white-space: nowrap; transition: all .18s;
+}
+.back-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(230,192,106,.14); }
+
+/* ---------- Stop: estimated time + Instagram explore ---------- */
+.stop-time { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px;
+  color: var(--gold-soft); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.stop-btn.ig { color: var(--coral); border-color: rgba(231,111,111,.42); text-decoration: none; }
+.stop-btn.ig:hover { color: #fff; background: var(--coral); border-color: var(--coral); }

@@ -16,6 +16,9 @@
   };
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Instagram-hashtag slug: drop parentheticals, keep alphanumerics only.
+  const slug = (s) => String(s).replace(/\([^)]*\)/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const absUrl = (p) => new URL(p, document.baseURI).href;
 
   /* ----- persistent state (localStorage, gracefully optional) ----- */
   const store = {
@@ -80,6 +83,7 @@
      MAP (Leaflet)
      ================================================================= */
   let map, markerLayer, routeLayer;
+  let baseStreets, baseSatellite, baseLayers, currentBase = "streets";
   const markers = []; // { marker, day, idx, cat }
   let activeCats = new Set(Object.keys(CATS)); // all on
 
@@ -111,10 +115,23 @@
   function initMap() {
     map = L.map("leaflet", { scrollWheelZoom: false, zoomControl: true })
       .setView([15.5, 100.5], 6);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: "abcd", maxZoom: 20,
-    }).addTo(map);
+
+    // Two free, keyless base layers: a clean street map + satellite (with labels).
+    baseStreets = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO", subdomains: "abcd", maxZoom: 20,
+    });
+    baseSatellite = L.layerGroup([
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics", maxZoom: 19,
+      }),
+      // transparent place labels on top of the imagery (Google-style hybrid look)
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png", {
+        subdomains: "abcd", maxZoom: 20,
+      }),
+    ]);
+    baseLayers = { streets: baseStreets, satellite: baseSatellite };
+    baseStreets.addTo(map);
+
     map.on("click", () => map.scrollWheelZoom.enable());
 
     markerLayer = L.layerGroup().addTo(map);
@@ -189,12 +206,21 @@
 
     const dt = new Date(d.dateISO + "T00:00:00");
     const dateStr = dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    const heroSrc = d.hero || ("img/day" + d.day + ".png");
+    // Absolute URL: a relative url() inside a CSS var resolves against the
+    // stylesheet (css/…), not the document — so resolve it here instead.
+    const heroAbs = new URL(heroSrc, document.baseURI).href;
     const banner = el("div", "day-banner",
-      `<div class="db-meta"><span>Day ${d.day} of ${DAYS.length}</span><span>·</span>
-        <span>${esc(dateStr)}</span><span>·</span>
-        <span class="db-city">${esc(d.city)}</span></div>
-       <h3>${esc(d.theme)}</h3>
-       <p>${esc(d.blurb)}</p>`);
+      `<div class="db-inner">
+         <div class="db-meta"><span>Day ${d.day} of ${DAYS.length}</span><span>·</span>
+           <span>${esc(dateStr)}</span><span>·</span>
+           <span class="db-city">${esc(d.city)}</span></div>
+         <h3>${esc(d.theme)}</h3>
+         <p>${esc(d.blurb)}</p>
+       </div>`);
+    banner.style.setProperty("--hero", `url("${heroAbs}")`);
+    // warm the browser cache so switching days feels instant
+    const pre = new Image(); pre.src = heroSrc;
     wrap.appendChild(banner);
 
     const list = el("div", "stop-list");
@@ -204,16 +230,19 @@
       const isVisited = visited.has(id);
       const node = el("div", "stop" + (isVisited ? " visited" : ""));
       node.style.setProperty("--dot", c.color);
+      const ig = `https://www.instagram.com/explore/tags/${slug(s.name)}/`;
       node.innerHTML = `
         <div class="stop-top">
           <div class="stop-emoji">${c.icon}</div>
           <div class="stop-main">
             <div class="stop-name">${esc(s.name)}<span class="stop-cat">${esc(c.label)}</span></div>
+            ${s.time ? `<div class="stop-time"><span class="clock">🕘</span> ${esc(s.time)}</div>` : ""}
             <div class="stop-desc">${esc(s.desc)}</div>
             <div class="stop-tip"><b>Tip ·</b> ${esc(s.tip)}</div>
             <div class="stop-actions">
               <button class="stop-btn locate">Show on map</button>
               <button class="stop-btn visit ${isVisited ? "on" : ""}">${isVisited ? "✓ Visited" : "Mark visited"}</button>
+              <a class="stop-btn ig" href="${ig}" target="_blank" rel="noopener" title="Explore #${slug(s.name)} on Instagram">📷 Explore</a>
             </div>
           </div>
         </div>`;
@@ -264,6 +293,22 @@
         renderMap(activeDay);
       });
       wrap.appendChild(chip);
+    });
+  }
+
+  /* Base-layer toggle: Map (streets) <-> Satellite. Markers/routes live in
+     their own panes, so they always stay on top of whichever base is active. */
+  function initLayerToggle() {
+    const btns = $$(".layer-btn");
+    btns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = btn.getAttribute("data-layer");
+        if (target === currentBase || !baseLayers[target]) return;
+        map.removeLayer(baseLayers[currentBase]);
+        baseLayers[target].addTo(map);
+        currentBase = target;
+        btns.forEach((b) => b.classList.toggle("active", b === btn));
+      });
     });
   }
 
@@ -340,9 +385,60 @@
   }
 
   /* =================================================================
+     DASHBOARD ("My Journeys") + view routing
+     ================================================================= */
+  function fmtTripDates() {
+    const a = new Date(TRIP.startISO + "T00:00:00");
+    const b = new Date(TRIP.endISO + "T00:00:00");
+    return a.getDate() + "–" + b.getDate() + " " +
+      b.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  }
+
+  function tripCard(t, disabled) {
+    const card = el("article", "trip-card" + (disabled ? " soon" : ""));
+    card.innerHTML = `
+      <div class="trip-cover"></div>
+      <div class="trip-scrim"></div>
+      <div class="trip-info">
+        <h3>${esc(t.title)}</h3>
+        <div class="trip-date">📅 ${esc(t.dateLabel)}</div>
+        ${t.subtitle ? `<p class="trip-sub">${esc(t.subtitle)}</p>` : ""}
+      </div>
+      ${disabled ? '<span class="trip-badge">Coming soon</span>' : '<span class="trip-go">Open →</span>'}`;
+    if (t.cover) card.querySelector(".trip-cover").style.backgroundImage = `url("${absUrl(t.cover)}")`;
+    return card;
+  }
+
+  function renderDashboard() {
+    const grid = $("#dashGrid");
+    const bkk = tripCard({ title: TRIP.title, dateLabel: fmtTripDates(), subtitle: TRIP.subtitle, cover: TRIP.cover }, false);
+    bkk.addEventListener("click", enterTrip);
+    grid.appendChild(bkk);
+    OTHER_TRIPS.forEach((t) => {
+      const card = tripCard(t, !!t.comingSoon);
+      if (!t.comingSoon) card.addEventListener("click", enterTrip);
+      grid.appendChild(card);
+    });
+  }
+
+  function showView(v) {
+    const trip = v === "trip";
+    $("#dashboard").classList.toggle("hidden", trip);
+    document.body.classList.toggle("dash-open", !trip);
+    window.scrollTo(0, 0);
+    if (trip) setTimeout(() => map && map.invalidateSize(), 60);
+  }
+  function enterTrip() { history.pushState(null, "", "#trip"); showView("trip"); }
+  function showDashboard() { history.pushState(null, "", "#"); showView("dashboard"); }
+
+  /* =================================================================
      BOOT
      ================================================================= */
   function boot() {
+    // hero cover image (trip cover, faded behind the title)
+    const hb = $("#heroBg");
+    if (hb && TRIP.cover) hb.style.backgroundImage = `url("${absUrl(TRIP.cover)}")`;
+
     renderStats();
     tickCountdown();
     cdTimer = setInterval(tickCountdown, 1000);
@@ -350,11 +446,18 @@
     renderDayRail();
     renderCatFilters();
     initMap();
+    initLayerToggle();
     selectDay(DAYS[0].day, false);
 
     renderFood();
     renderTips();
     renderPacking();
+
+    renderDashboard();
+    $("#backBtn").addEventListener("click", showDashboard);
+    window.addEventListener("popstate", () =>
+      showView(location.hash === "#trip" ? "trip" : "dashboard"));
+    showView(location.hash === "#trip" ? "trip" : "dashboard");
 
     // map needs a size recalc once visible
     setTimeout(() => map && map.invalidateSize(), 200);
