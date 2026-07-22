@@ -21,7 +21,7 @@ const OTHER_TRIPS = [
   {
     id: "taiwan-2027",
     title: "Taiwan Escape",
-    dateLabel: "February 2027",
+    dateLabel: "19 Feb – 1 Mar 2027",
     subtitle: "A journey through night markets, mountains & modern marvels.",
     cover: "img/taiwan.png",
     comingSoon: true,
