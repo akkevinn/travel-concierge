@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bangkok & Chiang Rai · Travel Concierge</title>
+  <meta name="description" content="Interactive visual planner for an 8-day Bangkok & Chiang Rai journey, 14–21 November 2026." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet (interactive map) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Ambient decorative gradient -->
+  <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <!-- ===== Top navigation ===== -->
+  <header class="topbar" id="top">
+    <div class="brand">
+      <span class="brand-mark">✦</span>
+      <span class="brand-text"><span class="brand-full">Concierge<em>·</em></span>BKK&amp;CNX</span>
+    </div>
+    <nav class="topnav">
+      <a href="#itinerary">Itinerary</a>
+      <a href="#map">Map</a>
+      <a href="#food">Food</a>
+      <a href="#tips">Concierge</a>
+      <a href="#pack">Pack</a>
+    </nav>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="hero-eyebrow">14 – 21 November 2026 · 8 days · 2 cities</div>
+    <h1 class="hero-title">Bangkok <span class="amp">&amp;</span> Chiang Rai</h1>
+    <p class="hero-sub" id="hero-sub"></p>
+
+    <div class="countdown" id="countdown" aria-live="polite">
+      <div class="cd-cell"><b data-cd="days">–</b><span>days</span></div>
+      <div class="cd-cell"><b data-cd="hours">–</b><span>hrs</span></div>
+      <div class="cd-cell"><b data-cd="mins">–</b><span>min</span></div>
+      <div class="cd-cell"><b data-cd="secs">–</b><span>sec</span></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <a class="hero-cta" href="#itinerary">Plan the journey ↓</a>
+  </section>
+
+  <!-- ===== Itinerary ===== -->
+  <section class="section" id="itinerary">
+    <div class="section-head">
+      <h2>The Itinerary</h2>
+      <p>Tap a day to focus the plan and the map. Each stop carries a concierge tip.</p>
+    </div>
+
+    <div class="day-rail" id="dayRail" role="tablist" aria-label="Trip days"></div>
+
+    <div class="plan-grid">
+      <div class="plan-detail" id="planDetail"></div>
+
+      <!-- ===== Map ===== -->
+      <div class="map-wrap" id="map">
+        <div class="map-toolbar">
+          <div class="map-title" id="mapTitle">Map</div>
+          <div class="map-filters" id="catFilters"></div>
+        </div>
+        <div id="leaflet"></div>
+        <div class="map-foot">
+          <button class="ghost-btn" id="btnAll">View whole trip</button>
+          <span class="map-hint">◦ dashed pins are approximate — confirm before you go</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Food ===== -->
+  <section class="section" id="food">
+    <div class="section-head">
+      <h2>Don't-Miss Eats</h2>
+      <p>The dishes worth planning a day around.</p>
+    </div>
+    <div class="food-grid" id="foodGrid"></div>
+  </section>
+
+  <!-- ===== Concierge tips ===== -->
+  <section class="section" id="tips">
+    <div class="section-head">
+      <h2>Concierge Notes</h2>
+      <p>Everything practical, in one place.</p>
+    </div>
+    <div class="tips-grid" id="tipsGrid"></div>
+  </section>
+
+  <!-- ===== Packing ===== -->
+  <section class="section" id="pack">
+    <div class="section-head">
+      <h2>Packing Checklist</h2>
+      <p>Ticks save to this device. <button class="link-btn" id="resetPack">reset</button></p>
+    </div>
+    <div class="pack-card">
+      <div class="pack-progress"><div class="pack-bar" id="packBar"></div></div>
+      <ul class="pack-list" id="packList"></ul>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Built as a personal travel concierge · Bangkok &amp; Chiang Rai · Nov 2026</p>
+    <p class="footer-sub">Offline-friendly static site. Map data © OpenStreetMap contributors, tiles © CARTO.</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
