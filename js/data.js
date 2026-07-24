@@ -101,7 +101,7 @@ const DAYS = [
       { name: "Thao Maha Brahma (Erawan Shrine)", cat: "temple", time: "45 mins", lat: 13.7442, lng: 100.5403,
         desc: "The four-faced Brahma shrine at Ratchaprasong — locals come to make wishes; resident dancers perform paid blessings.",
         tip: "Right beside Central World and Big C. Buy a flower-garland-and-incense set at the gate to offer." },
-      { name: "Go-Ang Pratunam Chicken Rice", cat: "food", time: "1 hour", lat: 13.7517, lng: 100.5408,
+      { name: "Go-Ang Pratunam Chicken Rice", cat: "food", time: "1 hour", lat: 13.7495863, lng: 100.5420894,
         desc: "The legendary 'pink shirt' Hainanese chicken rice — Michelin Bib Gourmand. Tender poached chicken, fragrant fat rice, fiery ginger-chilli sauce.",
         tip: "Lunch here. The pink-uniform branch is the original; expect a line that moves fast." },
       { name: "Central World", cat: "shopping", time: "2.5 hours", lat: 13.7466, lng: 100.5396,
