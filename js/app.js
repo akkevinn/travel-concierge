@@ -28,16 +28,26 @@
     },
     set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} },
   };
-  // v2: stop order changed with the Nov-2026 itinerary rewrite, so old
-  // day-index marks would land on the wrong stops.
-  const VISITED_KEY = "tc_visited_v2";
+  // v3: the plan now holds every block from the sheet, so positional
+  // indices shifted again and old marks would land on the wrong item.
+  const VISITED_KEY = "tc_visited_v3";
   const PACK_KEY    = "tc_pack_v1";
+  const BRIEF_KEY   = "tc_brief_v1";
   let visited = new Set(store.get(VISITED_KEY, []));
-  const stopId = (d, i) => `${d}-${i}`;
+  let briefMode = store.get(BRIEF_KEY, false);
+  // Marks are keyed by title, not position, so they survive future re-orders.
+  const stopId = (day, item) => `${day}::${item.title}`;
 
-  /* ----- derived stats ----- */
-  const allStops = DAYS.flatMap((d) => d.stops);
-  const count = (fn) => allStops.filter(fn).length;
+  /* ----- the plan -----
+     Every sheet row is an item. Items carrying `desc` are destinations:
+     they get a full card, a map pin and a filter chip. The rest (wake-ups,
+     walks, rides, flights) are timeline detail. */
+  const isMajor = (s) => !!s.desc;
+  const isPinned = (s) => typeof s.lat === "number" && typeof s.lng === "number";
+
+  const allItems = DAYS.flatMap((d) => d.plan);
+  const majors = allItems.filter(isMajor);
+  const count = (fn) => majors.filter(fn).length;
   const cities = [...new Set(DAYS.map((d) => d.city))];
 
   /* ----- money -----
@@ -51,20 +61,21 @@
     const parts = [];
     if (cost.baht) parts.push(baht(cost.baht) + " / pax");
     if (cost.idr) parts.push(rupiah(cost.idr) + " / pax");
+    if (cost.totalIdr) parts.push(rupiah(cost.totalIdr) + " total");
     return parts.join(" · ");
   }
 
-  /* Per-day spend we actually know: entrance fees/tickets + transit fares. */
+  /* Per-day spend we actually know. Everything the sheet left open simply
+     isn't counted, which is why the banner says "known costs". */
   function dayTotals(d) {
-    let entry = 0, fare = 0, idr = 0;
-    d.stops.forEach((s) => {
-      if (s.cost && s.cost.baht) entry += s.cost.baht;
-      if (s.cost && s.cost.idr) idr += s.cost.idr;
-      if (s.getting && s.getting.fare && s.getting.fare.baht) fare += s.getting.fare.baht;
+    let bahtPax = 0, idrPax = 0, idrTotal = 0;
+    d.plan.forEach((s) => {
+      if (!s.cost) return;
+      if (s.cost.baht) bahtPax += s.cost.baht;
+      if (s.cost.idr) idrPax += s.cost.idr;
+      if (s.cost.totalIdr) idrTotal += s.cost.totalIdr;
     });
-    // closing leg back to the hotel, when it isn't attached to a stop
-    if (d.wrap && d.wrap.fare && d.wrap.fare.baht) fare += d.wrap.fare.baht;
-    return { entry: entry, fare: fare, idr: idr, baht: entry + fare };
+    return { baht: bahtPax, idr: idrPax, idrTotal: idrTotal };
   }
 
   /* =================================================================
@@ -128,14 +139,18 @@
     });
   }
 
+  // The searchable name of a place: `place` when the row title is an action
+  // ("Check in & rest"), otherwise the title itself.
+  const placeName = (s) => s.place || s.title;
+
   function popupHtml(s) {
     const c = CATS[s.cat] || { label: s.cat };
-    const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name + " Thailand")}`;
+    const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeName(s) + " Thailand")}`;
     return `
       <div class="lp">
         <div class="lp-cat">${esc(c.label)}</div>
-        <div class="lp-name">${esc(s.name)}</div>
-        ${s.at ? `<div class="lp-when">${esc(s.at)}${s.time && s.time !== "—" ? " · " + esc(s.time) : ""}</div>` : ""}
+        <div class="lp-name">${esc(placeName(s))}</div>
+        ${s.at ? `<div class="lp-when">${esc(s.at)}${s.dur ? " · " + esc(s.dur) : ""}</div>` : ""}
         ${s.desc ? `<div class="lp-desc">${esc(s.desc)}</div>` : ""}
         ${s.approx ? '<div class="lp-approx">◦ approximate location — confirm before you go</div>' : ""}
         <a class="lp-link" href="${gmaps}" target="_blank" rel="noopener">Open in Google Maps →</a>
@@ -168,10 +183,14 @@
     routeLayer = L.layerGroup().addTo(map);
 
     DAYS.forEach((d) => {
-      d.stops.forEach((s, i) => {
-        const m = L.marker([s.lat, s.lng], { icon: pinIcon(s.cat, s.approx, i + 1) })
+      // Pins are the day's destinations, numbered in visiting order.
+      let n = 0;
+      d.plan.forEach((s) => {
+        if (!isPinned(s)) return;
+        n += 1;
+        const m = L.marker([s.lat, s.lng], { icon: pinIcon(s.cat, s.approx, n) })
           .bindPopup(popupHtml(s), { closeButton: true });
-        markers.push({ marker: m, day: d.day, idx: i, cat: s.cat, stop: s });
+        markers.push({ marker: m, day: d.day, key: stopId(d.day, s), cat: s.cat, stop: s });
       });
     });
   }
@@ -244,6 +263,7 @@
     const money = [
       t.baht ? baht(t.baht) + " / pax" : "",
       t.idr ? rupiah(t.idr) + " / pax" : "",
+      t.idrTotal ? rupiah(t.idrTotal) + " total" : "",
     ].filter(Boolean).join(" · ");
     const moneyHtml = money
       ? `<div class="db-cost" title="Fares and entrance fees already priced in the sheet. Meals and shopping are still open.">
@@ -264,48 +284,80 @@
     const pre = new Image(); pre.src = heroSrc;
     wrap.appendChild(banner);
 
-    const list = el("div", "stop-list");
-    d.stops.forEach((s, i) => {
+    // Full sheet by default; the toggle collapses a day to its destinations.
+    const majorCount = d.plan.filter(isMajor).length;
+    const bar = el("div", "plan-bar",
+      `<span class="pb-count">${d.plan.length} blocks · ${majorCount} destination${majorCount === 1 ? "" : "s"}</span>
+       <button class="pb-toggle${briefMode ? " on" : ""}" type="button">
+         ${briefMode ? "Show every block" : "Highlights only"}
+       </button>`);
+    bar.querySelector(".pb-toggle").addEventListener("click", () => {
+      briefMode = !briefMode;
+      store.set(BRIEF_KEY, briefMode);
+      renderDetail(d);
+    });
+    wrap.appendChild(bar);
+
+    const shown = briefMode ? d.plan.filter(isMajor) : d.plan;
+    const list = el("div", "stop-list" + (briefMode ? " brief" : ""));
+
+    shown.forEach((s) => {
       const c = CATS[s.cat] || { label: s.cat, color: "#ccc", icon: "📍" };
-      const id = stopId(d.day, i);
+      const cost = costLabel(s.cost);
+      const when = `
+        <div class="stop-when">
+          ${s.at ? `<span class="stop-at">${esc(s.at)}</span>` : ""}
+          ${s.dur ? `<span class="stop-time"><span class="clock">🕘</span> ${esc(s.dur)}</span>` : ""}
+          ${cost ? `<span class="stop-cost">💳 ${esc(cost)}</span>` : ""}
+        </div>`;
+
+      /* ---- timeline detail: a wake-up, a walk, a train, a flight ---- */
+      if (!isMajor(s)) {
+        const step = el("div", "step");
+        step.style.setProperty("--dot", c.color);
+        step.innerHTML = `
+          <div class="step-emoji">${c.icon}</div>
+          <div class="step-main">
+            <div class="step-title">${esc(s.title)}</div>
+            ${when}
+            ${s.note ? `<div class="step-note">${esc(s.note)}</div>` : ""}
+          </div>`;
+        list.appendChild(step);
+        return;
+      }
+
+      /* ---- destination: full card, pin, visited state, Instagram ---- */
+      const id = stopId(d.day, s);
       const isVisited = visited.has(id);
       const node = el("div", "stop" + (isVisited ? " visited" : ""));
       node.style.setProperty("--dot", c.color);
-      const ig = `https://www.instagram.com/explore/tags/${slug(s.name)}/`;
-      const cost = costLabel(s.cost);
-      const g = s.getting;
-      const gBits = g ? [
-        g.via ? esc(g.via) : "",
-        g.mins ? `${g.mins} min` : "",
-        g.fare && g.fare.baht ? `${baht(g.fare.baht)} / pax` : "",
-      ].filter(Boolean).join(" · ") : "";
+      const tag = slug(placeName(s));
+      const ig = `https://www.instagram.com/explore/tags/${tag}/`;
       node.innerHTML = `
         <div class="stop-top">
           <div class="stop-emoji">${c.icon}</div>
           <div class="stop-main">
-            <div class="stop-name">${esc(s.name)}<span class="stop-cat">${esc(c.label)}</span></div>
-            <div class="stop-when">
-              ${s.at ? `<span class="stop-at">${esc(s.at)}</span>` : ""}
-              ${s.time && s.time !== "—" ? `<span class="stop-time"><span class="clock">🕘</span> ${esc(s.time)}</span>` : ""}
-              ${cost ? `<span class="stop-cost">💳 ${esc(cost)}</span>` : ""}
-            </div>
-            ${gBits ? `<div class="stop-getting"><span class="gt-ico">🚇</span> ${gBits}</div>` : ""}
-            ${s.desc ? `<div class="stop-desc">${esc(s.desc)}</div>` : ""}
+            <div class="stop-name">${esc(s.title)}<span class="stop-cat">${esc(c.label)}</span></div>
+            ${s.place ? `<div class="stop-place">📍 ${esc(s.place)}</div>` : ""}
+            ${when}
+            ${s.note ? `<div class="step-note">${esc(s.note)}</div>` : ""}
+            <div class="stop-desc">${esc(s.desc)}</div>
             ${s.tip ? `<div class="stop-tip"><b>Tip ·</b> ${esc(s.tip)}</div>` : ""}
             <div class="stop-actions">
-              <button class="stop-btn locate">Show on map</button>
+              ${isPinned(s) ? '<button class="stop-btn locate">Show on map</button>' : ""}
               <button class="stop-btn visit ${isVisited ? "on" : ""}">${isVisited ? "✓ Visited" : "Mark visited"}</button>
-              <a class="stop-btn ig" href="${ig}" target="_blank" rel="noopener" title="Explore #${slug(s.name)} on Instagram">📷 Explore</a>
+              <a class="stop-btn ig" href="${ig}" target="_blank" rel="noopener" title="Explore #${tag} on Instagram">📷 Explore</a>
             </div>
           </div>
         </div>`;
-      // locate
-      node.querySelector(".locate").addEventListener("click", () => {
+
+      const loc = node.querySelector(".locate");
+      if (loc) loc.addEventListener("click", () => {
         document.getElementById("map").scrollIntoView({ behavior: "smooth", block: "center" });
-        const mk = markers.find((m) => m.day === d.day && m.idx === i);
+        const mk = markers.find((m) => m.day === d.day && m.key === id);
         if (mk) { map.setView([s.lat, s.lng], 14, { animate: true }); mk.marker.openPopup(); }
       });
-      // visited toggle
+
       const vb = node.querySelector(".visit");
       vb.addEventListener("click", () => {
         if (visited.has(id)) { visited.delete(id); node.classList.remove("visited"); vb.classList.remove("on"); vb.textContent = "Mark visited"; }
@@ -314,18 +366,6 @@
       });
       list.appendChild(node);
     });
-
-    if (d.wrap) {
-      const w = d.wrap;
-      const bits = [
-        w.via ? esc(w.via) : "",
-        w.mins ? `${w.mins} min` : "",
-        w.fare && w.fare.baht ? `${baht(w.fare.baht)} / pax` : "",
-      ].filter(Boolean).join(" · ");
-      list.appendChild(el("div", "stop-wrap",
-        `${w.at ? `<span class="stop-at">${esc(w.at)}</span>` : ""}
-         <span class="sw-text"><span class="gt-ico">🚇</span> ${bits}</span>`));
-    }
 
     wrap.appendChild(list);
   }
@@ -347,8 +387,8 @@
      ================================================================= */
   function renderCatFilters() {
     const wrap = $("#catFilters");
-    // only categories actually present in the trip
-    const present = [...new Set(allStops.map((s) => s.cat))];
+    // only categories that actually put a pin on the map
+    const present = [...new Set(allItems.filter(isPinned).map((s) => s.cat))];
     present.forEach((cat) => {
       const c = CATS[cat]; if (!c) return;
       const chip = el("span", "cat-chip",

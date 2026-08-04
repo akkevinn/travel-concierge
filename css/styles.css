@@ -523,12 +523,58 @@ body.dash-open { overflow: hidden; }
 }
 .stop-getting .gt-ico { flex: 0 0 auto; }
 
-/* Closing leg back to the hotel — not a stop, so no card or dot */
-.stop-wrap {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px;
-  padding: 2px 0 6px 2px; font-size: 12.5px; color: var(--muted-2);
+/* ---------- Timeline detail rows (prep, walks, rides, flights) ----------
+   Same rail as the destination cards, but no card, no border, dimmed —
+   so a full day reads as a sequence with the destinations standing out. */
+.step {
+  position: relative;
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 7px 16px 9px 18px;
+  margin-bottom: 2px;
 }
-.stop-wrap .sw-text { display: inline-flex; gap: 6px; align-items: baseline; }
+.step::before {
+  content: ""; position: absolute; left: -18px; top: 15px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--dot, var(--muted-2)); opacity: .75;
+  box-shadow: 0 0 0 3px var(--bg);
+}
+.step-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.step-emoji { flex: 0 0 auto; font-size: 12.5px; line-height: 1.5; opacity: .55; }
+.step-title { font-size: 13.5px; color: var(--muted); }
+.step .stop-when { margin-top: 1px; }
+.step .stop-at {
+  background: transparent; border-color: transparent;
+  color: var(--muted-2); font-weight: 500; padding: 0;
+}
+.step .stop-time { color: var(--muted-2); }
+.step-note {
+  font-size: 12px; color: var(--muted-2); white-space: pre-line;
+  padding-left: 9px; border-left: 2px solid var(--line-soft); margin-top: 4px;
+}
+.stop .step-note { margin-top: 7px; }
+
+/* The resolved venue, when the row title is an action ("Check in & rest") */
+.stop-place { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+
+/* ---------- Day toolbar: block count + detail toggle ---------- */
+.plan-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 10px; margin: 14px 0 16px;
+}
+.pb-count {
+  font-size: 12px; letter-spacing: .4px; text-transform: uppercase;
+  color: var(--muted-2);
+}
+.pb-toggle {
+  cursor: pointer; font-family: var(--sans); font-size: 12px; font-weight: 500;
+  color: var(--muted); background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; padding: 5px 13px; transition: all .18s;
+}
+.pb-toggle:hover { color: var(--text); border-color: var(--jade); }
+.pb-toggle.on { color: var(--bg); background: var(--jade); border-color: var(--jade); }
+
+/* In highlights-only mode the rail has no detail rows to thread through */
+.stop-list.brief::before { opacity: .5; }
 
 /* Day banner: known-cost summary */
 .day-banner .db-cost {
