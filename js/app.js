@@ -28,7 +28,9 @@
     },
     set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} },
   };
-  const VISITED_KEY = "tc_visited_v1";
+  // v2: stop order changed with the Nov-2026 itinerary rewrite, so old
+  // day-index marks would land on the wrong stops.
+  const VISITED_KEY = "tc_visited_v2";
   const PACK_KEY    = "tc_pack_v1";
   let visited = new Set(store.get(VISITED_KEY, []));
   const stopId = (d, i) => `${d}-${i}`;
@@ -37,6 +39,33 @@
   const allStops = DAYS.flatMap((d) => d.stops);
   const count = (fn) => allStops.filter(fn).length;
   const cities = [...new Set(DAYS.map((d) => d.city))];
+
+  /* ----- money -----
+     Costs in the data are per person. Anything the sheet hasn't priced yet
+     is simply absent, so it renders blank instead of a guessed number. */
+  const baht   = (n) => "฿" + n.toLocaleString("en-US");
+  const rupiah = (n) => "Rp" + n.toLocaleString("de-DE");
+
+  function costLabel(cost) {
+    if (!cost) return "";
+    const parts = [];
+    if (cost.baht) parts.push(baht(cost.baht) + " / pax");
+    if (cost.idr) parts.push(rupiah(cost.idr) + " / pax");
+    return parts.join(" · ");
+  }
+
+  /* Per-day spend we actually know: entrance fees/tickets + transit fares. */
+  function dayTotals(d) {
+    let entry = 0, fare = 0, idr = 0;
+    d.stops.forEach((s) => {
+      if (s.cost && s.cost.baht) entry += s.cost.baht;
+      if (s.cost && s.cost.idr) idr += s.cost.idr;
+      if (s.getting && s.getting.fare && s.getting.fare.baht) fare += s.getting.fare.baht;
+    });
+    // closing leg back to the hotel, when it isn't attached to a stop
+    if (d.wrap && d.wrap.fare && d.wrap.fare.baht) fare += d.wrap.fare.baht;
+    return { entry: entry, fare: fare, idr: idr, baht: entry + fare };
+  }
 
   /* =================================================================
      HERO: subtitle, countdown, stats
@@ -106,7 +135,8 @@
       <div class="lp">
         <div class="lp-cat">${esc(c.label)}</div>
         <div class="lp-name">${esc(s.name)}</div>
-        <div class="lp-desc">${esc(s.desc)}</div>
+        ${s.at ? `<div class="lp-when">${esc(s.at)}${s.time && s.time !== "—" ? " · " + esc(s.time) : ""}</div>` : ""}
+        ${s.desc ? `<div class="lp-desc">${esc(s.desc)}</div>` : ""}
         ${s.approx ? '<div class="lp-approx">◦ approximate location — confirm before you go</div>' : ""}
         <a class="lp-link" href="${gmaps}" target="_blank" rel="noopener">Open in Google Maps →</a>
       </div>`;
@@ -210,6 +240,16 @@
     // Absolute URL: a relative url() inside a CSS var resolves against the
     // stylesheet (css/…), not the document — so resolve it here instead.
     const heroAbs = new URL(heroSrc, document.baseURI).href;
+    const t = dayTotals(d);
+    const money = [
+      t.baht ? baht(t.baht) + " / pax" : "",
+      t.idr ? rupiah(t.idr) + " / pax" : "",
+    ].filter(Boolean).join(" · ");
+    const moneyHtml = money
+      ? `<div class="db-cost" title="Fares and entrance fees already priced in the sheet. Meals and shopping are still open.">
+           💳 ${esc(money)} <span class="db-cost-note">known costs</span></div>`
+      : "";
+
     const banner = el("div", "day-banner",
       `<div class="db-inner">
          <div class="db-meta"><span>Day ${d.day} of ${DAYS.length}</span><span>·</span>
@@ -217,6 +257,7 @@
            <span class="db-city">${esc(d.city)}</span></div>
          <h3>${esc(d.theme)}</h3>
          <p>${esc(d.blurb)}</p>
+         ${moneyHtml}
        </div>`);
     banner.style.setProperty("--hero", `url("${heroAbs}")`);
     // warm the browser cache so switching days feels instant
@@ -231,14 +272,26 @@
       const node = el("div", "stop" + (isVisited ? " visited" : ""));
       node.style.setProperty("--dot", c.color);
       const ig = `https://www.instagram.com/explore/tags/${slug(s.name)}/`;
+      const cost = costLabel(s.cost);
+      const g = s.getting;
+      const gBits = g ? [
+        g.via ? esc(g.via) : "",
+        g.mins ? `${g.mins} min` : "",
+        g.fare && g.fare.baht ? `${baht(g.fare.baht)} / pax` : "",
+      ].filter(Boolean).join(" · ") : "";
       node.innerHTML = `
         <div class="stop-top">
           <div class="stop-emoji">${c.icon}</div>
           <div class="stop-main">
             <div class="stop-name">${esc(s.name)}<span class="stop-cat">${esc(c.label)}</span></div>
-            ${s.time ? `<div class="stop-time"><span class="clock">🕘</span> ${esc(s.time)}</div>` : ""}
-            <div class="stop-desc">${esc(s.desc)}</div>
-            <div class="stop-tip"><b>Tip ·</b> ${esc(s.tip)}</div>
+            <div class="stop-when">
+              ${s.at ? `<span class="stop-at">${esc(s.at)}</span>` : ""}
+              ${s.time && s.time !== "—" ? `<span class="stop-time"><span class="clock">🕘</span> ${esc(s.time)}</span>` : ""}
+              ${cost ? `<span class="stop-cost">💳 ${esc(cost)}</span>` : ""}
+            </div>
+            ${gBits ? `<div class="stop-getting"><span class="gt-ico">🚇</span> ${gBits}</div>` : ""}
+            ${s.desc ? `<div class="stop-desc">${esc(s.desc)}</div>` : ""}
+            ${s.tip ? `<div class="stop-tip"><b>Tip ·</b> ${esc(s.tip)}</div>` : ""}
             <div class="stop-actions">
               <button class="stop-btn locate">Show on map</button>
               <button class="stop-btn visit ${isVisited ? "on" : ""}">${isVisited ? "✓ Visited" : "Mark visited"}</button>
@@ -261,6 +314,19 @@
       });
       list.appendChild(node);
     });
+
+    if (d.wrap) {
+      const w = d.wrap;
+      const bits = [
+        w.via ? esc(w.via) : "",
+        w.mins ? `${w.mins} min` : "",
+        w.fare && w.fare.baht ? `${baht(w.fare.baht)} / pax` : "",
+      ].filter(Boolean).join(" · ");
+      list.appendChild(el("div", "stop-wrap",
+        `${w.at ? `<span class="stop-at">${esc(w.at)}</span>` : ""}
+         <span class="sw-text"><span class="gt-ico">🚇</span> ${bits}</span>`));
+    }
+
     wrap.appendChild(list);
   }
 
