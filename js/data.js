@@ -103,6 +103,9 @@ const DAYS = [
   },
   {
     day: 2, dateISO: "2026-11-15", weekday: "Sun", city: "Bangkok",
+    // Ancient City's banner moved to day 7 with the destination itself.
+    // `hero` overrides the img/day<N>.png convention, so any format works.
+    hero: "img/day2.avif",
     theme: "Northern Temples & the Golden Mount",
     blurb: "Out to Don Mueang for a quiet local temple, back for the Golden Mount, Michelin chicken rice and a skincare run.",
     plan: [
