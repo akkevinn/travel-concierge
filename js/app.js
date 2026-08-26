@@ -59,7 +59,10 @@
   function costLabel(cost) {
     if (!cost) return "";
     const parts = [];
-    if (cost.baht) parts.push(baht(cost.baht) + " / pax");
+    // A literal 0 in the sheet means no charge — distinct from "not priced yet",
+    // which arrives as no `cost` at all and renders blank.
+    if (cost.baht === 0) parts.push("Free");
+    else if (cost.baht) parts.push(baht(cost.baht) + " / pax");
     if (cost.idr) parts.push(rupiah(cost.idr) + " / pax");
     if (cost.totalIdr) parts.push(rupiah(cost.totalIdr) + " total");
     return parts.join(" · ");
