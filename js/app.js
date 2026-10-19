@@ -145,6 +145,10 @@
   // The searchable name of a place: `place` when the row title is an action
   // ("Check in & rest"), otherwise the title itself.
   const placeName = (s) => s.place || s.title;
+  // Hashtag for the Explore link: an explicit `tag` wins, else the venue name.
+  // Never the raw title, which is descriptive ("Wat Arun: lunch here") and
+  // would point at a hashtag nobody uses.
+  const tagOf = (s) => s.tag || slug(placeName(s));
 
   function popupHtml(s) {
     const c = CATS[s.cat] || { label: s.cat };
@@ -165,16 +169,18 @@
       .setView([15.5, 100.5], 6);
 
     // Two free, keyless base layers: a clean street map + satellite (with labels).
-    baseStreets = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: "&copy; OpenStreetMap &copy; CARTO", subdomains: "abcd", maxZoom: 20,
+    // CARTO's basemaps started requiring an API key and now serve a watermarked
+    // placeholder tile to anonymous callers, so both layers come from Esri.
+    baseStreets = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+      attribution: "&copy; Esri, HERE, Garmin, OpenStreetMap contributors", maxZoom: 19,
     });
     baseSatellite = L.layerGroup([
       L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
         attribution: "Imagery &copy; Esri, Maxar, Earthstar Geographics", maxZoom: 19,
       }),
       // transparent place labels on top of the imagery (Google-style hybrid look)
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png", {
-        subdomains: "abcd", maxZoom: 20,
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 19,
       }),
     ]);
     baseLayers = { streets: baseStreets, satellite: baseSatellite };
@@ -334,7 +340,7 @@
       const isVisited = visited.has(id);
       const node = el("div", "stop" + (isVisited ? " visited" : ""));
       node.style.setProperty("--dot", c.color);
-      const tag = slug(placeName(s));
+      const tag = tagOf(s);
       const ig = `https://www.instagram.com/explore/tags/${tag}/`;
       node.innerHTML = `
         <div class="stop-top">
