@@ -1,5 +1,5 @@
 /* =====================================================================
-   Travel Concierge — Bangkok & Chiang Rai
+   Travel Concierge: Bangkok & Chiang Rai
    Dark "concierge" theme · gold + jade accents
    ===================================================================== */
 
@@ -524,7 +524,7 @@ body.dash-open { overflow: hidden; }
 .stop-getting .gt-ico { flex: 0 0 auto; }
 
 /* ---------- Timeline detail rows (prep, walks, rides, flights) ----------
-   Same rail as the destination cards, but no card, no border, dimmed —
+   Same rail as the destination cards, but no card, no border, dimmed,
    so a full day reads as a sequence with the destinations standing out. */
 .step {
   position: relative;

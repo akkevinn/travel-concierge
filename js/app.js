@@ -1,5 +1,5 @@
 /* =====================================================================
-   Travel Concierge — app logic
+   Travel Concierge: app logic
    Vanilla JS. Depends on data.js (TRIP, CATS, DAYS, FOOD_HIGHLIGHTS,
    TIPS, PACKING) and Leaflet (window.L).
    ===================================================================== */
@@ -59,7 +59,7 @@
   function costLabel(cost) {
     if (!cost) return "";
     const parts = [];
-    // A literal 0 in the sheet means no charge — distinct from "not priced yet",
+    // A literal 0 in the sheet means no charge, distinct from "not priced yet",
     // which arrives as no `cost` at all and renders blank.
     if (cost.baht === 0) parts.push("Free");
     else if (cost.baht) parts.push(baht(cost.baht) + " / pax");
@@ -155,7 +155,7 @@
         <div class="lp-name">${esc(placeName(s))}</div>
         ${s.at ? `<div class="lp-when">${esc(s.at)}${s.dur ? " · " + esc(s.dur) : ""}</div>` : ""}
         ${s.desc ? `<div class="lp-desc">${esc(s.desc)}</div>` : ""}
-        ${s.approx ? '<div class="lp-approx">◦ approximate location — confirm before you go</div>' : ""}
+        ${s.approx ? '<div class="lp-approx">◦ approximate location, confirm before you go</div>' : ""}
         <a class="lp-link" href="${gmaps}" target="_blank" rel="noopener">Open in Google Maps →</a>
       </div>`;
   }
@@ -260,7 +260,7 @@
     const dateStr = dt.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
     const heroSrc = d.hero || ("img/day" + d.day + ".png");
     // Absolute URL: a relative url() inside a CSS var resolves against the
-    // stylesheet (css/…), not the document — so resolve it here instead.
+    // stylesheet (css/…), not the document, so resolve it here instead.
     const heroAbs = new URL(heroSrc, document.baseURI).href;
     const t = dayTotals(d);
     const money = [
@@ -549,7 +549,7 @@
 
   // Scroll an element to just under the sticky header. Uses a plain instant
   // scroll (reliable everywhere) and asks for a smooth animation where the
-  // browser supports it — falling back gracefully if it doesn't.
+  // browser supports it, falling back gracefully if it doesn't.
   function scrollToEl(target) {
     const OFFSET = 72; // sticky topbar height
     const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - OFFSET);
