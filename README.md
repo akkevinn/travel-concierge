@@ -20,10 +20,10 @@ Or just open `index.html` directly in a browser.
 - **Hero**: cover image behind the title, live countdown to departure, trip stats.
 - **Day-by-day itinerary** (8 tabs): each day has its own hero image and a stop
   timeline. Every stop shows an **estimated time**, a description, a concierge tip,
-  a *Show on map* button, a *Mark visited* toggle (saved on device), and an
-  **Explore → Instagram** hashtag link.
+  a *Show on map* button and an **Explore → Instagram** hashtag link. Blocks mark
+  themselves done or happening now from the device clock.
 - **Interactive Leaflet map** with a **Map / Satellite toggle** (free, keyless:
-  CARTO streets + Esri imagery), color-coded pins by category, per-day route lines,
+  Esri streets + Esri imagery), color-coded pins by category, per-day route lines,
   category filters, "view whole trip", and Google Maps deep-links in each popup.
 - **Don't-miss eats** guide and a **Concierge Notes** panel (weather, temple dress
   code, transport, the Chiang Rai flight hop, money, connectivity, timing).

@@ -28,14 +28,10 @@
     },
     set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} },
   };
-  // v3: the plan now holds every block from the sheet, so positional
-  // indices shifted again and old marks would land on the wrong item.
-  const VISITED_KEY = "tc_visited_v3";
   const PACK_KEY    = "tc_pack_v1";
   const BRIEF_KEY   = "tc_brief_v1";
-  let visited = new Set(store.get(VISITED_KEY, []));
   let briefMode = store.get(BRIEF_KEY, false);
-  // Marks are keyed by title, not position, so they survive future re-orders.
+  // Stable key tying a stop's card to its map pin.
   const stopId = (day, item) => `${day}::${item.title}`;
 
   /* ----- the plan -----
@@ -58,6 +54,7 @@
 
   function costLabel(cost) {
     if (!cost) return "";
+    if (cost.label) return cost.label;
     const parts = [];
     // A literal 0 in the sheet means no charge, distinct from "not priced yet",
     // which arrives as no `cost` at all and renders blank.
@@ -423,10 +420,9 @@
         return;
       }
 
-      /* ---- destination: full card, pin, visited state, Instagram ---- */
+      /* ---- destination: full card, map pin, Instagram ---- */
       const id = stopId(d.day, s);
-      const isVisited = visited.has(id);
-      const node = el("div", "stop" + (isVisited ? " visited" : ""));
+      const node = el("div", "stop");
       node.style.setProperty("--dot", c.color);
       const tag = tagOf(s);
       const ig = `https://www.instagram.com/explore/tags/${tag}/`;
@@ -442,7 +438,6 @@
             ${s.tip ? `<div class="stop-tip"><b>Tip ·</b> ${esc(s.tip)}</div>` : ""}
             <div class="stop-actions">
               ${isPinned(s) ? '<button class="stop-btn locate">Show on map</button>' : ""}
-              <button class="stop-btn visit ${isVisited ? "on" : ""}">${isVisited ? "✓ Visited" : "Mark visited"}</button>
               <a class="stop-btn ig" href="${ig}" target="_blank" rel="noopener" title="Explore #${tag} on Instagram">📷 Explore</a>
             </div>
           </div>
@@ -455,12 +450,6 @@
         if (mk) { map.setView([s.lat, s.lng], 14, { animate: true }); mk.marker.openPopup(); }
       });
 
-      const vb = node.querySelector(".visit");
-      vb.addEventListener("click", () => {
-        if (visited.has(id)) { visited.delete(id); node.classList.remove("visited"); vb.classList.remove("on"); vb.textContent = "Mark visited"; }
-        else { visited.add(id); node.classList.add("visited"); vb.classList.add("on"); vb.textContent = "✓ Visited"; }
-        store.set(VISITED_KEY, [...visited]);
-      });
       list.appendChild(node);
     });
 
