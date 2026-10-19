@@ -82,6 +82,82 @@
   }
 
   /* =================================================================
+     TRIP CLOCK
+     Marks each block as done / happening now / still ahead, live.
+
+     Every time in the sheet is local to the trip, and Jakarta and Bangkok
+     are both UTC+7, so block times resolve against that fixed offset
+     rather than the viewer's timezone. The schedule then reads correctly
+     from any device in any country, and because everything derives from
+     Date.now() there is nothing to redeploy once the trip starts.
+
+     Append ?now=2026-11-16T11:00 to preview any moment of the trip.
+     ================================================================= */
+  const TRIP_UTC_OFFSET = 7;          // hours; Jakarta (WIB) and Bangkok (ICT)
+  const AT_RANGE = /^(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})$/;
+  const AT_OPEN  = /^(\d{1,2}):(\d{2})\s*onward$/i;
+  const OPEN_TAIL_MS = 3 * 3600 * 1000;  // how long a trailing open block runs
+
+  function wallToEpoch(dateISO, h, m) {
+    const [y, mo, d] = dateISO.split("-").map(Number);
+    return Date.UTC(y, mo - 1, d, h - TRIP_UTC_OFFSET, m);
+  }
+
+  // A frozen clock for previewing, otherwise the real one.
+  const previewNow = (() => {
+    const q = new URLSearchParams(location.search).get("now");
+    const t = q ? Date.parse(/Z|[+-]\d{2}:?\d{2}$/.test(q) ? q : q + "+07:00") : NaN;
+    return isNaN(t) ? null : t;
+  })();
+  const nowMs = () => (previewNow == null ? Date.now() : previewNow);
+
+  /* Resolve every block to an absolute window, once. An open-ended block
+     ("23:15 onward") runs until the next block starts. */
+  function buildClock() {
+    const flat = [];
+    DAYS.forEach((d) => d.plan.forEach((it) => {
+      const at = (it.at || "").trim();
+      let m = AT_RANGE.exec(at);
+      if (m) it._t = { start: wallToEpoch(d.dateISO, +m[1], +m[2]), end: wallToEpoch(d.dateISO, +m[3], +m[4]) };
+      else if ((m = AT_OPEN.exec(at))) it._t = { start: wallToEpoch(d.dateISO, +m[1], +m[2]), end: null };
+      else it._t = null;
+      flat.push(it);
+    }));
+    for (let i = 0; i < flat.length; i++) {
+      const t = flat[i]._t;
+      if (!t || t.end != null) continue;
+      const next = flat.slice(i + 1).find((x) => x._t && x._t.start != null);
+      t.end = next ? next._t.start : t.start + OPEN_TAIL_MS;
+    }
+    DAYS.forEach((d) => {
+      const ts = d.plan.map((it) => it._t).filter(Boolean);
+      d._t = ts.length ? { start: ts[0].start, end: ts[ts.length - 1].end } : null;
+    });
+  }
+
+  const blockState = (it, now) => {
+    const t = it._t;
+    if (!t) return "ahead";
+    if (now >= t.end) return "done";
+    if (now >= t.start) return "now";
+    return "ahead";
+  };
+  const dayState = (d, now) => {
+    if (!d._t) return "ahead";
+    if (now >= d._t.end) return "done";
+    if (now >= d._t.start) return "today";
+    return "ahead";
+  };
+  const tripPhase = (now) => {
+    const first = DAYS[0]._t, last = DAYS[DAYS.length - 1]._t;
+    if (!first || !last) return "before";
+    if (now < first.start) return "before";
+    return now >= last.end ? "after" : "during";
+  };
+  const currentDay = (now) => (DAYS.find((d) => dayState(d, now) === "today")
+    || DAYS.find((d) => d._t && now < d._t.start) || null);
+
+  /* =================================================================
      HERO: subtitle, countdown, stats
      ================================================================= */
   function fmtRange() {
@@ -109,8 +185,17 @@
 
   let cdTimer = null;
   function tickCountdown() {
-    const target = new Date(TRIP.startISO + "T00:00:00").getTime();
-    const now = Date.now();
+    const now = nowMs();
+    const phase = tripPhase(now);
+    if (phase !== "before") {
+      if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+      const d = currentDay(now);
+      $("#countdown").innerHTML = phase === "during"
+        ? `<div class="cd-live"><span class="cd-dot"></span>Day ${d ? d.day : ""} of ${DAYS.length} in progress</div>`
+        : '<div class="cd-live">Trip complete 🛬</div>';
+      return;
+    }
+    const target = DAYS[0]._t ? DAYS[0]._t.start : new Date(TRIP.startISO + "T00:00:00").getTime();
     let diff = Math.max(0, target - now);
     const dd = Math.floor(diff / 86400000); diff -= dd * 86400000;
     const hh = Math.floor(diff / 3600000);  diff -= hh * 3600000;
@@ -118,8 +203,6 @@
     const ss = Math.floor(diff / 1000);
     const set = (k, v) => { const n = $(`[data-cd="${k}"]`); if (n) n.textContent = String(v).padStart(2, "0"); };
     set("days", dd); set("hours", hh); set("mins", mm); set("secs", ss);
-    if (target - now <= 0 && cdTimer) { clearInterval(cdTimer); $("#countdown").innerHTML =
-      '<div class="cd-cell" style="min-width:auto;padding:14px 22px"><b style="font-size:22px">Bon voyage! ✈️</b></div>'; }
   }
 
   /* =================================================================
@@ -250,7 +333,8 @@
       const pill = el("button", "day-pill",
         `<div class="dp-day">Day ${d.day} · ${esc(d.weekday)}</div>
          <div class="dp-date">${esc(dateStr)}</div>
-         <div class="dp-city">${esc(d.city)}</div>`);
+         <div class="dp-city">${esc(d.city)}</div>
+         <div class="dp-state"></div>`);
       pill.setAttribute("role", "tab");
       pill.addEventListener("click", () => selectDay(d.day, true));
       rail.appendChild(pill);
@@ -297,10 +381,14 @@
     const majorCount = d.plan.filter(isMajor).length;
     const bar = el("div", "plan-bar",
       `<span class="pb-count">${d.plan.length} blocks · ${majorCount} destination${majorCount === 1 ? "" : "s"}</span>
-       <button class="pb-toggle${briefMode ? " on" : ""}" type="button">
-         ${briefMode ? "Show every block" : "Highlights only"}
-       </button>`);
-    bar.querySelector(".pb-toggle").addEventListener("click", () => {
+       <span class="pb-actions">
+         <button class="pb-toggle jump" id="jumpNow" type="button" hidden>Jump to now</button>
+         <button class="pb-toggle${briefMode ? " on" : ""}" type="button">
+           ${briefMode ? "Show every block" : "Highlights only"}
+         </button>
+       </span>`);
+    bar.querySelector("#jumpNow").addEventListener("click", () => jumpToNow(true));
+    bar.querySelector(".pb-toggle:not(.jump)").addEventListener("click", () => {
       briefMode = !briefMode;
       store.set(BRIEF_KEY, briefMode);
       renderDetail(d);
@@ -376,7 +464,63 @@
       list.appendChild(node);
     });
 
+    list._shown = shown;
     wrap.appendChild(list);
+    paintProgress();
+  }
+
+  /* Repaint done / now marks. Cheap enough to run on a timer, and it
+     touches classes only, so it never disturbs scroll position or the map. */
+  function paintProgress() {
+    const now = nowMs();
+    DAYS.forEach((d) => {
+      if (!d._pill) return;
+      const st = dayState(d, now);
+      d._pill.classList.toggle("is-done", st === "done");
+      d._pill.classList.toggle("is-today", st === "today");
+      const slot = d._pill.querySelector(".dp-state");
+      if (!slot) return;
+      const done = d.plan.filter((it) => blockState(it, now) === "done").length;
+      slot.textContent = st === "today" ? `${done}/${d.plan.length} done`
+        : st === "done" ? "done" : "";
+    });
+
+    const list = $(".stop-list");
+    if (list && list._shown) {
+      Array.from(list.children).forEach((row, i) => {
+        const it = list._shown[i];
+        if (!it) return;
+        const st = blockState(it, now);
+        row.classList.toggle("is-done", st === "done");
+        row.classList.toggle("is-now", st === "now");
+        const chip = row.querySelector(".now-chip");
+        if (st === "now" && !chip) {
+          const when = row.querySelector(".stop-when");
+          if (when) when.insertBefore(el("span", "now-chip", "<i></i>NOW"), when.firstChild);
+        } else if (st !== "now" && chip) {
+          chip.remove();
+        }
+      });
+    }
+
+    const jump = $("#jumpNow");
+    if (jump) jump.hidden = tripPhase(now) !== "during";
+  }
+
+  /* Open the day that is running and bring the live block into view. */
+  function jumpToNow(scroll) {
+    const now = nowMs();
+    if (tripPhase(now) !== "during") return false;
+    const d = currentDay(now);
+    if (!d) return false;
+    if (activePanel !== "itinerary") showPanel("itinerary", null, false);
+    if (activeDay !== d.day) selectDay(d.day, false);
+    if (briefMode && !d.plan.filter(isMajor).some((it) => blockState(it, now) === "now")) {
+      briefMode = false; store.set(BRIEF_KEY, false); renderDetail(d);
+    }
+    const row = $(".stop-list .is-now");
+    if (row && scroll) scrollToEl(row);
+    return !!row;
   }
 
   function selectDay(dayNum, scroll) {
@@ -386,6 +530,7 @@
     renderDetail(d);
     $("#mapTitle").textContent = `Day ${d.day} · ${d.city}`;
     renderMap(dayNum);
+    paintProgress();
     if (scroll && window.innerWidth <= 900) {
       $("#planDetail").scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -556,6 +701,35 @@
   // Scroll an element to just under the sticky header. Uses a plain instant
   // scroll (reliable everywhere) and asks for a smooth animation where the
   // browser supports it, falling back gracefully if it doesn't.
+  /* =================================================================
+     SECTION TABS
+     The top nav switches between sections rather than scrolling one long
+     page, so mobile shows the hero plus one section at a time. "Map" lives
+     inside the itinerary, so it opens that tab and scrolls to the map.
+     ================================================================= */
+  const PANELS = ["itinerary", "food", "tips", "pack"];
+  const PANEL_FOR = { itinerary: "itinerary", map: "itinerary", food: "food", tips: "tips", pack: "pack" };
+  let activePanel = "itinerary";
+
+  function showPanel(panel, focusId, scroll) {
+    activePanel = panel;
+    PANELS.forEach((id) => {
+      const sec = document.getElementById(id);
+      if (sec) sec.hidden = id !== panel;
+    });
+    const navKey = focusId && PANEL_FOR[focusId] === panel ? focusId : panel;
+    $$(".topnav a").forEach((a) => {
+      const on = a.getAttribute("href").slice(1) === navKey;
+      a.classList.toggle("active", on);
+      if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    // Leaflet measures its box on show; a hidden map would render grey tiles.
+    if (panel === "itinerary") setTimeout(() => map && map.invalidateSize(), 60);
+    if (scroll === false) return;
+    const target = document.getElementById(focusId || panel);
+    if (target) scrollToEl(target);
+  }
+
   function scrollToEl(target) {
     const OFFSET = 72; // sticky topbar height
     const top = Math.max(0, target.getBoundingClientRect().top + window.scrollY - OFFSET);
@@ -577,6 +751,8 @@
     const hb = $("#heroBg");
     if (hb && TRIP.cover) hb.style.backgroundImage = `url("${absUrl(TRIP.cover)}")`;
 
+    buildClock();
+
     renderStats();
     tickCountdown();
     cdTimer = setInterval(tickCountdown, 1000);
@@ -585,7 +761,11 @@
     renderCatFilters();
     initMap();
     initLayerToggle();
-    selectDay(DAYS[0].day, false);
+    // Open whichever day is live (or next up) rather than always day 1.
+    const live = currentDay(nowMs());
+    selectDay(live ? live.day : DAYS[0].day, false);
+    // Marks move on their own; no reload and no redeploy during the trip.
+    setInterval(paintProgress, 30000);
 
     renderFood();
     renderTips();
@@ -594,15 +774,17 @@
     renderDashboard();
     $("#backBtn").addEventListener("click", showDashboard);
 
-    // In-page anchors (nav + "Plan the journey"): smooth-scroll to the section
+    // In-page anchors (nav + "Plan the journey"): switch to the section's tab
     // instead of changing the hash, which would otherwise flip back to the dashboard.
     $$('a[href^="#"]').forEach((a) => {
       a.addEventListener("click", (e) => {
         const id = a.getAttribute("href").slice(1);
+        if (PANEL_FOR[id]) { e.preventDefault(); showPanel(PANEL_FOR[id], id); return; }
         const target = id && document.getElementById(id);
         if (target) { e.preventDefault(); scrollToEl(target); }
       });
     });
+    showPanel("itinerary", null, false);
 
     window.addEventListener("popstate", () => showView(viewForHash()));
     showView(viewForHash());

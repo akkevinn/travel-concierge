@@ -78,13 +78,25 @@ body {
   background: var(--gold); transition: width .25s;
 }
 .topnav a:hover::after { width: 100%; }
+.topnav a.active { color: var(--gold); }
+.topnav a.active::after { width: 100%; }
+
+/* Only one section shows at a time; the nav switches between them. */
+.section[hidden] { display: none !important; }
 @media (max-width: 620px){
   .topbar { padding: 10px 14px; gap: 10px; }
   .brand { display: none; }                   /* back button takes the left slot */
   .back-btn { font-size: 12.5px; padding: 6px 12px; }
-  .topnav { gap: 14px; }
-  .topnav a { font-size: 13px; }
-  .topnav a:nth-child(n+4){ display:none; }   /* keep Itinerary · Map · Food */
+  .back-label { display: none; }               /* arrow only: the tabs need the width */
+  .topnav {
+    gap: 14px; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .topnav::-webkit-scrollbar { display: none; }
+  .topnav a { font-size: 13px; white-space: nowrap; }
+  /* Map sits inside the Itinerary tab, so on a phone the four sections
+     are the tabs and every one of them stays reachable. */
+  .topnav a[href="#map"] { display: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -598,4 +610,66 @@ body.dash-open { overflow: hidden; }
   .stop-when { gap: 5px 7px; }
   .stop-at, .stop-cost { font-size: 11.5px; }
   .stop-getting { font-size: 12px; }
+}
+
+/* ---------- Live trip progress ----------
+   Blocks mark themselves done / happening now from the device clock, so the
+   page stays correct through the trip without being rebuilt. */
+.step.is-done, .stop.is-done { opacity: .45; }
+.stop.is-done { border-color: var(--line-soft); }
+.step.is-done::before, .stop.is-done::before { background: var(--muted-2); box-shadow: none; }
+
+.stop.is-now {
+  border-color: var(--jade);
+  background: linear-gradient(180deg, rgba(76,196,163,.07), transparent 60%);
+  box-shadow: 0 0 0 1px rgba(76,196,163,.25), 0 10px 30px -14px rgba(76,196,163,.5);
+}
+.step.is-now .step-title { color: var(--text); }
+.step.is-now::before, .stop.is-now::before {
+  background: var(--jade);
+  box-shadow: 0 0 0 1px var(--jade), 0 0 12px 2px rgba(76,196,163,.5);
+}
+.step.is-now .stop-at, .stop.is-now .stop-at { border-color: var(--jade); color: var(--text); }
+
+.now-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  color: var(--bg); background: var(--jade);
+  border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+}
+.now-chip i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--bg); animation: nowPulse 1.6s ease-in-out infinite;
+}
+@keyframes nowPulse { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Day rail: which days are behind you, which one is running */
+.day-pill .dp-state {
+  margin-top: 6px; font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted-2); min-height: 13px;
+}
+.day-pill.is-done { opacity: .55; }
+.day-pill.is-today { border-color: var(--jade); }
+.day-pill.is-today .dp-state { color: var(--jade); font-weight: 600; }
+
+/* Hero: replaces the countdown once the trip is under way */
+.cd-live {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--serif); font-size: 22px; color: var(--gold-soft);
+  background: rgba(9,15,13,.6); border: 1px solid rgba(230,192,106,.3);
+  border-radius: 999px; padding: 12px 24px;
+}
+.cd-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--jade);
+  box-shadow: 0 0 10px 2px rgba(76,196,163,.6);
+  animation: nowPulse 1.6s ease-in-out infinite;
+}
+
+.pb-actions { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.pb-toggle.jump { color: var(--jade); border-color: rgba(76,196,163,.45); }
+.pb-toggle.jump:hover { color: var(--bg); background: var(--jade); }
+.pb-toggle[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .now-chip i, .cd-dot { animation: none; }
 }
