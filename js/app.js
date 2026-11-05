@@ -230,6 +230,13 @@
   // would point at a hashtag nobody uses.
   const tagOf = (s) => s.tag || slug(placeName(s));
 
+  // Optional extra links on a stop (an event page, a booking). Only http(s)
+  // URLs are rendered, so a typo in the data can't become a script link.
+  const linksHtml = (s) => (s.links || [])
+    .filter((l) => l && /^https?:\/\//i.test(l.url || ""))
+    .map((l) => `<a class="stop-btn link" href="${esc(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label || "Link")}</a>`)
+    .join("");
+
   function popupHtml(s) {
     const c = CATS[s.cat] || { label: s.cat };
     const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeName(s) + " Thailand")}`;
@@ -439,6 +446,7 @@
             <div class="stop-actions">
               ${isPinned(s) ? '<button class="stop-btn locate">Show on map</button>' : ""}
               <a class="stop-btn ig" href="${ig}" target="_blank" rel="noopener" title="Explore #${tag} on Instagram">📷 Explore</a>
+              ${linksHtml(s)}
             </div>
           </div>
         </div>`;

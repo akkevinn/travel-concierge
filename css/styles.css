@@ -507,6 +507,8 @@ body.dash-open { overflow: hidden; }
   color: var(--gold-soft); font-variant-numeric: tabular-nums; }
 .stop-btn.ig { color: var(--coral); border-color: rgba(231,111,111,.42); text-decoration: none; }
 .stop-btn.ig:hover { color: #fff; background: var(--coral); border-color: var(--coral); }
+.stop-btn.link { color: var(--gold); border-color: rgba(230,192,106,.42); text-decoration: none; }
+.stop-btn.link:hover { color: var(--bg); background: var(--gold); border-color: var(--gold); }
 
 /* ---------- Stop: planned time block, cost, and how you get there ---------- */
 .stop-when {
