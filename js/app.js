@@ -28,7 +28,9 @@
     },
     set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} },
   };
-  const PACK_KEY    = "tc_pack_v1";
+  // v2: ticks are keyed by person and item name now, not list position.
+  const PACK_KEY    = "tc_pack_v2";
+  const PACK_WHO_KEY = "tc_pack_who_v1";
   const BRIEF_KEY   = "tc_brief_v1";
   let briefMode = store.get(BRIEF_KEY, false);
   // Stable key tying a stop's card to its map pin.
@@ -605,30 +607,76 @@
   /* =================================================================
      PACKING CHECKLIST
      ================================================================= */
+  /* One list per person, shown one at a time behind a switch. The choice is
+     remembered, so each phone opens straight to its owner's list. */
   let packed = new Set(store.get(PACK_KEY, []));
+  let packWho = store.get(PACK_WHO_KEY, PACKING[0].who);
+  if (!PACKING.some((p) => p.who === packWho)) packWho = PACKING[0].who;
+  const packId = (who, item) => `${who}::${item}`;
+  const packer = () => PACKING.find((p) => p.who === packWho);
+  const packItems = (p) => p.groups.flatMap((g) => g.items);
+
   function updatePackBar() {
-    const pct = PACKING.length ? Math.round((packed.size / PACKING.length) * 100) : 0;
-    $("#packBar").style.width = pct + "%";
+    const p = packer();
+    const all = packItems(p);
+    const done = all.filter((it) => packed.has(packId(p.who, it))).length;
+    $("#packBar").style.width = (all.length ? Math.round((done / all.length) * 100) : 0) + "%";
+    $("#packCount").textContent = `${done} of ${all.length} packed`;
+    $$(".pack-group").forEach((sec) => {
+      const g = p.groups[+sec.dataset.g];
+      const n = g.items.filter((it) => packed.has(packId(p.who, it))).length;
+      sec.querySelector(".pack-cat-n").textContent = `${n}/${g.items.length}`;
+      sec.classList.toggle("complete", n === g.items.length);
+    });
   }
+
   function renderPacking() {
-    const list = $("#packList");
-    list.innerHTML = "";
-    PACKING.forEach((label, i) => {
-      const on = packed.has(i);
-      const li = el("li", "pack-item" + (on ? " done" : ""),
-        `<span class="pack-box">✓</span><span>${esc(label)}</span>`);
-      li.addEventListener("click", () => {
-        if (packed.has(i)) { packed.delete(i); li.classList.remove("done"); }
-        else { packed.add(i); li.classList.add("done"); }
-        store.set(PACK_KEY, [...packed]);
-        updatePackBar();
+    const who = $("#packWho");
+    who.innerHTML = "";
+    PACKING.forEach((p) => {
+      const on = p.who === packWho;
+      const b = el("button", "pack-who-btn" + (on ? " on" : ""), esc(p.who));
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.addEventListener("click", () => {
+        packWho = p.who; store.set(PACK_WHO_KEY, packWho); renderPacking();
       });
-      list.appendChild(li);
+      who.appendChild(b);
+    });
+
+    const p = packer();
+    const wrap = $("#packGroups");
+    wrap.innerHTML = "";
+    p.groups.forEach((g, gi) => {
+      const sec = el("div", "pack-group");
+      sec.dataset.g = gi;
+      sec.appendChild(el("h4", "pack-cat",
+        `<span>${esc(g.cat)}</span><span class="pack-cat-n"></span>`));
+      const ul = el("ul", "pack-list");
+      g.items.forEach((label) => {
+        const id = packId(p.who, label);
+        const li = el("li", "pack-item" + (packed.has(id) ? " done" : ""),
+          `<span class="pack-box">✓</span><span>${esc(label)}</span>`);
+        li.addEventListener("click", () => {
+          if (packed.has(id)) { packed.delete(id); li.classList.remove("done"); }
+          else { packed.add(id); li.classList.add("done"); }
+          store.set(PACK_KEY, [...packed]);
+          updatePackBar();
+        });
+        ul.appendChild(li);
+      });
+      sec.appendChild(ul);
+      wrap.appendChild(sec);
     });
     updatePackBar();
   }
+  // Reset clears only the list on screen, never the other person's ticks.
   $("#resetPack").addEventListener("click", () => {
-    packed = new Set(); store.set(PACK_KEY, []); renderPacking();
+    const p = packer();
+    packItems(p).forEach((it) => packed.delete(packId(p.who, it)));
+    store.set(PACK_KEY, [...packed]);
+    renderPacking();
   });
 
   /* =================================================================

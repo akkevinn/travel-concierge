@@ -393,21 +393,35 @@ const TIPS = [
     body: "Every block from the planning sheet is here: wake-ups, walks, train legs and all, so you can see exactly how tight each day runs. Use the 'Highlights only' toggle to collapse a day down to its destinations." },
 ];
 
-/* Interactive packing checklist (persisted in localStorage) */
+/* Packing lists, one per person, from the Packing tab of the planning sheet.
+   Grouped by category so like items sit together; within a category the
+   sheet's own order is kept. Ticks persist per item on this device. */
 const PACKING = [
-  "Passport (6+ months validity)",
-  "THB cash + travel card",
-  "Power adapter (Type A/B/C, 220V)",
-  "Light, breathable clothing",
-  "Modest temple outfit / scarf / sarong",
-  "Comfortable walking shoes (slip-on)",
-  "Light layer for Chiang Rai mornings",
-  "Sunscreen & sunglasses",
-  "Mosquito repellent",
-  "Reusable water bottle",
-  "eSIM / tourist SIM",
-  "Medications & basic first aid",
-  "Small umbrella / poncho",
-  "Overnight bag for the Chiang Rai hop",
-  "DMK luggage-storage receipt",
+  { who: "Olivia", groups: [
+    { cat: "Documents, money & keys", items: ["Passport", "Cash 10k Baht"] },
+    { cat: "Clothes", items: ["Kaos putih berkantong (langsung pakai)", "Kaos HItam", "Kemeja putih kantong", "Kemeja silk hijau", "Kemeja biru-putih", "Baju sushi go GI", "Celana jeans (langsung pakai)", "Celana hitam 7/8", "Celana pendek hitam", "Celana rok skort cokelat JP (simpan di tas)", "Rok cokelat panjang jepang", "Dress bunga", "Dress hitam popo", "Jaket denim", "Outer putih"] },
+    { cat: "Underwear & socks", items: ["Dalaman", "Kaos kaki"] },
+    { cat: "Shoes & accessories", items: ["Selendang Erawan", "Sendal"] },
+    { cat: "Toiletries", items: ["Sabun", "Shampoo", "Conditioner", "Handuk"] },
+    { cat: "Skincare", items: ["Sabun cuci muka", "Sun screen", "Moisturizer", "Serum", "Toner", "Kapas", "Lipbalm"] },
+    { cat: "Makeup", items: ["Cushion", "Lipstick", "Blush on", "Jepitan bulu mata", "Mascara"] },
+    { cat: "Hair", items: ["Karet rambut", "Jedai 2", "Catokan"] },
+    { cat: "Health", items: ["Obat", "Softlens"] },
+    { cat: "Electronics", items: ["Kipas portable", "Power bank", "TWS", "Charger Hp dan Jam"] },
+    { cat: "Travel gear", items: ["Gembok", "Kunci koper", "Laundry bag", "Vaccum bag + pompa vaccum"] },
+    { cat: "Everyday bits", items: ["Tisu kering", "Tisu basah"] },
+  ] },
+  { who: "Kevin", groups: [
+    { cat: "Documents, money & keys", items: ["Passport", "Cash 10k Baht", "CC", "Cash Indo 200k", "E-money", "Kunci rumah"] },
+    { cat: "Clothes", items: ["Kaos chopper (langsung pakai)", "Kaos hitam matematika", "Kaos polo hitam", "Kaos putih", "Kaos putih commongoods", "Kaos abu commongoods", "Kemeja biru formula 4", "Kemeja biru uniqlo", "Kemeja hitam klotifai", "Celana pendek putih (langsung pakai)", "Celana panjang abu", "Celana panjang jeans", "Celana panjang hitam", "Jaket hijau"] },
+    { cat: "Underwear & socks", items: ["Celana dalam langsung pakai + 2 cadangan", "Kaos kaki langsung pakai + 2 cadangan"] },
+    { cat: "Shoes & accessories", items: ["Sendal", "Kacamata hitam", "Ikat pinggang", "Sepatu sacai"] },
+    { cat: "Toiletries", items: ["Peralatan mandi", "Alat cukur kumis", "Parfum"] },
+    { cat: "Skincare", items: ["Sabun muka", "Moisturizer", "Sun screen", "Sun block", "Lip balm", "Nivea kertas minyak"] },
+    { cat: "Hair", items: ["Gatsby clay"] },
+    { cat: "Health", items: ["Obat thiamazole 4 pcs", "Inhaler"] },
+    { cat: "Electronics", items: ["Kipas portable", "Power bank", "Passpod wifi", "TWS", "Tripod", "Tablet", "Keyboard tablet", "Charger Hp", "Charger HP & tablet", "Charger jam tangan", "Charger power bank"] },
+    { cat: "Travel gear", items: ["Gembok + kunci koper", "Laundry bag", "Timbangan koper", "Ransel asus (taruh di koper)", "Penutup mata", "Gantungan lipat", "Tote bag untuk oleh-oleh"] },
+    { cat: "Everyday bits", items: ["Tisu kering", "Tisu basah", "Karet", "Pulpen", "Gunting", "Payung"] },
+  ] },
 ];

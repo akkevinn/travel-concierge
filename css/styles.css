@@ -391,6 +391,31 @@ body {
 
 /* ---------- Packing ---------- */
 .pack-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+
+/* Whose list: a two-way switch above the progress bar */
+.pack-who {
+  display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 16px;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 999px;
+}
+.pack-who-btn {
+  cursor: pointer; font-family: var(--sans); font-size: 13.5px; font-weight: 600;
+  color: var(--muted); background: transparent; border: 0;
+  border-radius: 999px; padding: 7px 20px; transition: all .18s;
+}
+.pack-who-btn:hover { color: var(--text); }
+.pack-who-btn.on { color: var(--bg); background: linear-gradient(90deg, var(--gold-soft), var(--gold)); }
+.pack-count { font-size: 12.5px; color: var(--muted); margin: -8px 0 18px; }
+
+/* Category blocks: a small heading with a live done/total count */
+.pack-group + .pack-group { margin-top: 20px; }
+.pack-cat {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold-soft); margin: 0 0 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.pack-cat-n { font-variant-numeric: tabular-nums; letter-spacing: .04em; color: var(--muted-2); }
+.pack-group.complete .pack-cat-n { color: var(--jade); }
 .pack-progress { height: 8px; background: var(--bg-2); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
 .pack-bar { height: 100%; width: 0; background: linear-gradient(90deg, var(--jade), var(--gold)); transition: width .35s; }
 .pack-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
