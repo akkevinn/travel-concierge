@@ -697,3 +697,12 @@ body.dash-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .now-chip i, .cd-dot { animation: none; }
 }
+
+/* Booking proof location: blue so it reads apart from time (jade) and cost (gold) */
+.stop-book {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  color: #a9cdf3; background: rgba(107,168,230,.12);
+  border: 1px solid rgba(107,168,230,.4);
+  border-radius: 999px; padding: 2px 9px;
+}

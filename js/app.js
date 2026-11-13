@@ -232,6 +232,15 @@
   // would point at a hashtag nobody uses.
   const tagOf = (s) => s.tag || slug(placeName(s));
 
+  // Where the booking proof / QR code lives, so nobody hunts through apps at
+  // the counter: which app, and whose phone it's on.
+  const bookingHtml = (s) => {
+    const b = s.booking;
+    if (!b || !b.app) return "";
+    const tip = `Booking proof in ${b.app}${b.who ? `, on ${b.who}'s phone` : ""}`;
+    return `<span class="stop-book" title="${esc(tip)}" aria-label="${esc(tip)}">🎟 ${esc(b.app)}${b.who ? ` · ${esc(b.who)}` : ""}</span>`;
+  };
+
   // Optional extra links on a stop (an event page, a booking). Only http(s)
   // URLs are rendered, so a typo in the data can't become a script link.
   const linksHtml = (s) => (s.links || [])
@@ -412,6 +421,7 @@
           ${s.at ? `<span class="stop-at">${esc(s.at)}</span>` : ""}
           ${s.dur ? `<span class="stop-time"><span class="clock">🕘</span> ${esc(s.dur)}</span>` : ""}
           ${cost ? `<span class="stop-cost">💳 ${esc(cost)}</span>` : ""}
+          ${bookingHtml(s)}
         </div>`;
 
       /* ---- timeline detail: a wake-up, a walk, a train, a flight ---- */
